@@ -1,5 +1,7 @@
 from _decimal import Decimal
 from datetime import datetime, date
+from typing import Optional
+
 from sqlalchemy import func
 from ..models.orders import Purchase, Order
 from ..models.categories import Category
@@ -51,14 +53,30 @@ class OrdersManager:
     @staticmethod
     def save_order(order: Order):
         db.session.add(order)
+        # if order.id is not None:
         OrdersManager.update_payment(order)
+        db.session.commit()
+
+    @staticmethod
+    def cancel_order(order: Order):
+        db.session.add(order)
+        order.date_canceled = datetime.now(tz=settings.TIMEZONE)
+        order.date_finished = None
+        db.session.query(Purchase).filter(
+            Purchase.order_id == order.id,
+            Purchase.is_paid == True | Purchase.is_prepayment_paid == True,
+        ).update({'is_canceled': True})
+        db.session.query(Purchase).filter(
+            Purchase.order_id == order.id,
+            Purchase.is_paid == False & Purchase.is_prepayment_paid == False,
+        ).delete()
         db.session.commit()
 
 
 class PurchasesManager:
     @staticmethod
     def set_price(purchase: Purchase):
-        category: Category = purchase.room.category
+        category: Category = db.session.query(Room).get(purchase.room_id).category
         delta_seconds: Decimal = (purchase.end - purchase.start).total_seconds()
         SECONDS_IN_DAY: int = 86400
         days: int = round(Decimal(delta_seconds / SECONDS_IN_DAY), 0)
@@ -82,29 +100,33 @@ class PurchasesManager:
         purchase.refund = purchase.price * refund_ratio
 
     @staticmethod
-    def set_room(purchase: Purchase):
-        room = CategoriesManager.pick_room(
-            category=purchase.room.category,
+    def set_room(purchase: Purchase, category: Category):
+        room_id = CategoriesManager.pick_room(
+            category=category,
             start=purchase.start,
             end=purchase.end,
             purchase_id=purchase.id
         )
-        if room is None:
+        if room_id is None:
             raise ValueError('На эти даты нет свободных комнат этой категории')
 
-        purchase.room = room
+        purchase.room_id = room_id
 
     @staticmethod
-    def save_purchase(purchase: Purchase):
+    def save_purchase(purchase: Purchase, category: Optional[Category] = None):
         db.session.add(purchase)
-        if purchase.room is None:
-            purchase.room = db.session.query(Room).get(purchase.room_id)
-        if purchase.order is None:
-            purchase.order = db.session.query(Order).get(purchase.order_id)
+        category = category if category is not None else purchase.room.category
 
-        PurchasesManager.set_room(purchase)
+        PurchasesManager.set_room(purchase, category)
         PurchasesManager.set_price(purchase)
         db.session.commit()
         OrdersManager.save_order(purchase.order)
 
-
+    @staticmethod
+    def mark_as_canceled(purchase: Purchase):
+        db.session.add(purchase)
+        if purchase.is_prepayment_paid or purchase.is_paid:
+            purchase.is_canceled = True
+        else:
+            db.session.delete(purchase)
+        db.session.commit()

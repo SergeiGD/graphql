@@ -10,6 +10,7 @@ from ariadne.asgi import GraphQL
 from ariadne.explorer import ExplorerGraphiQL
 from flask import Flask, jsonify, request
 from modules.models.base import db
+from modules.settings import settings
 
 # from modules.models.base import Base
 from modules.models.tags import Tag
@@ -26,6 +27,7 @@ from modules.managers.categories_manager import CategoriesManager
 from modules.managers.photos_manager import PhotosManager
 from modules.managers.rooms_manager import RoomsManager
 from modules.managers.tags_manager import TagsManager
+from modules.managers.clients_manager import ClientsManager
 
 # TODO: индексы прокинуть
 # TODO: cron для очищения корзины и заказов
@@ -40,13 +42,14 @@ tag = ObjectType('Tag')
 category = ObjectType('Category')
 room = ObjectType('Room')
 photo = ObjectType('Photo')
+client = ObjectType('Client')
 datetime_scalar = ScalarType('Datetime')
 date_scalar = ScalarType('Date')
 
 
 @datetime_scalar.serializer
 def serialize_datetime(value: datetime):
-    return value.isoformat()
+    return value.replace(tzinfo=settings.TIMEZONE).isoformat()
 
 
 @datetime_scalar.value_parser
@@ -54,7 +57,7 @@ def parse_datetime_value(value: str):
     try:
         return datetime.fromisoformat(value)
     except (ValueError, TypeError):
-        raise ValueError(f'"{value}" is not a valid ISO 8601 string')
+        raise ValueError(f'{value} не является ISO 8601 строкой')
 
 
 @date_scalar.serializer
@@ -67,7 +70,7 @@ def parse_date_value(value: str):
     try:
         return date.fromisoformat(value)
     except (ValueError, TypeError):
-        raise ValueError(f'"{value}" is not a valid ISO 8601 string')
+        raise ValueError(f'{value} не является ISO 8601 строкой')
 
 
 def return_validation_error(validation_error: Exception):
@@ -206,6 +209,92 @@ def resolve_update_tag(*_, id: int, input: dict):
     }}
 
 
+@mutation.field('createClient')
+def resolve_create_client(*_, input: dict):
+    try:
+        client = Client(**input)
+        ClientsManager.save_client(client)
+    except ValueError as validation_error:
+        return return_validation_error(validation_error)
+    return {'client': client, 'status': {
+        'success': True,
+    }}
+
+
+@mutation.field('updateClient')
+def resolve_update_client(*_, id: int, input: dict):
+    client: Client = db.session.query(Client).filter(
+        Client.id == id,
+        Client.date_deleted == None
+    ).first()
+    if client is None:
+        return return_not_found_error(Client.REPR_MODEL_NAME)
+    try:
+        update_fields(client, input)
+        ClientsManager.save_client(client)
+    except ValueError as validation_error:
+        return return_validation_error(validation_error)
+    return {'client': client, 'status': {
+        'success': True,
+    }}
+
+
+@mutation.field('createOrder')
+def resolve_create_order(*_, input: dict):
+    try:
+        order = Order(**input)
+        OrdersManager.save_order(order)
+    except ValueError as validation_error:
+        return return_validation_error(validation_error)
+    return {'order': order, 'status': {
+        'success': True,
+    }}
+
+
+@mutation.field('updateOrder')
+def resolve_update_order(*_, id: int, input: dict):
+    order: Order = db.session.query(Order).filter(
+        Order.id == id,
+    ).first()
+    if order is None:
+        return return_not_found_error(Order.REPR_MODEL_NAME)
+    try:
+        update_fields(order, input)
+        OrdersManager.save_order(order)
+    except ValueError as validation_error:
+        return return_validation_error(validation_error)
+    return {'order': order, 'status': {
+        'success': True,
+    }}
+
+
+@mutation.field('createPurchase')
+def resolve_create_purchase(*_, input: dict):
+    category: Category = db.session.query(Category).get(input['category_id'])
+    if category is None:
+        return return_not_found_error(Category.REPR_MODEL_NAME)
+    try:
+        args = {attr: val for attr, val in input.items() if attr != 'category_id'}
+        purchase = Purchase(**args)
+        PurchasesManager.save_purchase(purchase=purchase, category=category)
+    except ValueError as validation_error:
+        return return_validation_error(validation_error)
+    return {'purchase': purchase, 'status': {
+        'success': True,
+    }}
+
+
+@mutation.field('cancelPurchase')
+def resolve_cancel_purchase(*_, id: int):
+    purchase: Purchase = db.session.query(Purchase).filter(
+        Purchase.id == id,
+    ).first()
+    if purchase is None:
+        return return_not_found_error(Order.REPR_MODEL_NAME)
+    PurchasesManager.mark_as_canceled(purchase)
+    return {'success': True}
+
+
 @mutation.field('addTagToCategory')
 def resolve_add_tag_to_category(*_, tag_id: int, category_id: int):
     tag: Tag = db.session.query(Tag).filter(
@@ -232,6 +321,17 @@ def resolve_tags(*_, tag_id: Optional[int] = None):
     return db.session.query(Tag).all()
 
 
+@tag.field('categories')
+def resolve_tag_categories(obj: Tag, *_):
+    return obj.categories
+
+
+@category.field('rooms')
+def resolve_category_rooms(obj: Category, *_):
+    # TODO: для контроля прав на просмотр связанных объектов так надо
+    return obj.rooms
+
+
 @query.field('categories')
 def resolve_categories(*_, cat_id: Optional[int] = None):
     # TODO: ВО ТУТ ПРОВЕРКА ПРАВ?
@@ -254,10 +354,31 @@ def resolve_photos(*_, photo_id: Optional[int] = None):
     return db.session.query(Photo).all()
 
 
+@query.field('clients')
+def resolve_clients(*_, client_id: Optional[int] = None):
+    if client_id:
+        return db.session.query(Client).filter_by(id=client_id, date_deleted=None)
+    return db.session.query(Client).filter_by(date_deleted=None)
+
+
+@query.field('orders')
+def resolve_orders(*_, order_id: Optional[int] = None):
+    if order_id:
+        return db.session.query(Order).filter_by(id=order_id)
+    return db.session.query(Order).all()
+
+
+@query.field('purchases')
+def resolve_orders(*_, purchase_id: Optional[int] = None):
+    if purchase_id:
+        return db.session.query(Purchase).filter_by(id=purchase_id)
+    return db.session.query(Purchase).all()
+
+
 checked_types = gql(type_defs)
 schema = make_executable_schema(
     checked_types,
-    [query, mutation, tag, category, room, photo, date_scalar, datetime_scalar],
+    [query, mutation, tag, category, room, photo, date_scalar, datetime_scalar, client],
     convert_names_case=True
 )
 explorer_html = ExplorerGraphiQL().html(None)
@@ -292,6 +413,7 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True, host='0.0.0.0')
+    # app.run(debug=True)
 
 
 

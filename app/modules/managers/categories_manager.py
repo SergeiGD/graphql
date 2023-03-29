@@ -35,8 +35,7 @@ class CategoriesManager:
             return None
 
         picked_room_id = list(free_rooms)[0]
-        picked_room = db.session.query(Room).get(picked_room_id)
-        return picked_room
+        return picked_room_id
 
     @staticmethod
     def save_category(category: Category):

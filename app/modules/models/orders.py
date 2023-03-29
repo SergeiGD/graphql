@@ -1,6 +1,6 @@
 from typing import Optional, List
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates, Session, column_property
-from sqlalchemy import ForeignKey, func, select, event
+from sqlalchemy import ForeignKey, func, select, event, case, and_
 from sqlalchemy.ext.hybrid import hybrid_property
 from _decimal import Decimal
 from datetime import datetime, date
@@ -31,6 +31,17 @@ class Purchase(db.Model):
     room_id: Mapped[int] = mapped_column(ForeignKey('room.id'))
     room: Mapped['rooms.Room'] = relationship(back_populates='purchases')
 
+    @validates('order_id')
+    def validate_order_id(self, key, order_id):
+        if not db.session.query(
+                Order.query.filter(
+                    Order.id == order_id,
+                ).exists()
+        ).scalar():
+            raise ValueError('Не найден заказ с таким id')
+
+        return order_id
+
 
 def validate_dates(mapper, connection, target: Purchase):
     if target.start >= target.end:
@@ -50,17 +61,29 @@ class BaseOrder(db.Model):
     type: Mapped[str]
 
     price = column_property(
-        select(func.sum(Purchase.price))
-        .where(Purchase.order_id == id)
-        .correlate_except(Purchase)
-        .scalar_subquery()
+        func.coalesce(
+            select(func.sum(
+                case(
+                    (and_(Purchase.is_canceled == True, Purchase.is_paid == True), Purchase.price - Purchase.refund),
+                    (and_(Purchase.is_canceled == True, Purchase.is_paid == False), Purchase.prepayment),
+                    else_=Purchase.price
+                )
+            ))
+            .where(Purchase.order_id == id)
+            .correlate_except(Purchase)
+            .scalar_subquery(),
+            0
+        )
     )
 
     prepayment = column_property(
-        select(func.sum(Purchase.prepayment))
-        .where(Purchase.order_id == id)
-        .correlate_except(Purchase)
-        .scalar_subquery()
+        func.coalesce(
+            select(func.sum(Purchase.prepayment))
+            .where(Purchase.order_id == id)
+            .correlate_except(Purchase)
+            .scalar_subquery(),
+            0
+        )
     )
 
     purchases: Mapped[List['Purchase']] = relationship(back_populates='order', viewonly=True)
@@ -90,21 +113,55 @@ class Order(BaseOrder):
         'polymorphic_identity': 'order',
     }
 
+    @hybrid_property
+    def left_to_pay(self):
+        left_to_pay = self.price - self.paid
+        if left_to_pay > 0:
+            return left_to_pay
+        return 0
+
+    @hybrid_property
+    def left_to_refund(self):
+        """
+        Свойство для получения сумму, которую ОСТАЛОСЬ вернуть
+        """
+        left_to_refund = self.paid - self.price - self.refunded
+        if left_to_refund > 0:
+            return left_to_refund
+        return 0
+
     @validates('refunded')
     def validate_refunded(self, key, refunded):
         if refunded < 0:
             raise ValueError('Сумма возврата не должна быть меньше 0')
+        if refunded > self.paid:
+            raise ValueError('Сумма возврата не должна быть больше суммы оплаты')
         return refunded
 
     @validates('paid')
     def validate_refunded(self, key, paid):
         if paid < 0:
             raise ValueError('Сумма оплаты не должна быть меньше 0')
+        if paid < self.refunded:
+            raise ValueError('Сумма оплаты не должна быть меньше суммы возврата')
         return paid
+
+    @validates('category_id')
+    def validate_client_id(self, key, client_id):
+        if not db.session.query(
+                users.User.query.filter(
+                    users.User.id == client_id,
+                    users.User.date_deleted == None,
+                ).exists()
+        ).scalar():
+            raise ValueError('Не найден клиент с таким id')
+
+        return client_id
 
 
 class Cart(BaseOrder):
     __tablename__ = 'cart'
+    REPR_MODEL_NAME = 'корзина'
 
     id: Mapped[int] = mapped_column(ForeignKey("base_order.id"), primary_key=True)
     cart_uuid: Mapped[str] = mapped_column(unique=True)

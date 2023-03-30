@@ -2,8 +2,8 @@ from datetime import datetime
 from typing import Optional
 from .base import db
 from ..settings import settings
-from sqlalchemy.orm import Mapped, validates, mapped_column, relationship, Session
-from sqlalchemy import ForeignKey, event, func
+from sqlalchemy.orm import Mapped, validates, mapped_column, relationship
+from sqlalchemy import ForeignKey
 import modules.models.categories as categories
 import modules.models.orders as orders
 

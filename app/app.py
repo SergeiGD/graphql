@@ -12,7 +12,6 @@ from modules.graphql.types import mutation, query, category, datetime_scalar, da
 # TODO: поиск
 # TODO: индексы прокинуть
 # TODO: cron для очищения корзины и заказов
-# TODO: ключи индепотентности
 # TODO: dataclasses
 # TODO: типизацию
 
@@ -51,6 +50,7 @@ if __name__ == "__main__":
     db_user = environ.get('DB_USER', 'db_user')
     db_password = environ.get('DB_PASSWORD', 'db_password')
     app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql+psycopg2://{db_user}:{db_password}@db/{db_name}'
+
     db.init_app(app)
     with app.app_context():
         db.create_all()

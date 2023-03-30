@@ -1,5 +1,5 @@
 from typing import Optional, List
-from sqlalchemy.orm import Mapped, mapped_column, relationship, validates, Session, column_property
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates, column_property
 from sqlalchemy import ForeignKey, func, select, event, case, and_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.types import DECIMAL
@@ -9,7 +9,6 @@ from ..settings import settings
 from .base import db
 import modules.models.users as users
 import modules.models.rooms as rooms
-# import modules.models.purchases as purchases
 
 
 class Purchase(db.Model):
@@ -63,12 +62,16 @@ class BaseOrder(db.Model):
     date_created: Mapped[datetime] = mapped_column(default=datetime.now(tz=settings.TIMEZONE))
     type: Mapped[str]
 
+    # вычисляемое свойство для получения цены из покупок в заказе
     price = column_property(
         func.coalesce(
             select(func.sum(
                 case(
+                    # если отменен и оплачен, то цена = цена - возврат средств
                     (and_(Purchase.is_canceled == True, Purchase.is_paid == True), Purchase.price - Purchase.refund),
+                    # если отменен и не оплачен, то цена = предоплате
                     (and_(Purchase.is_canceled == True, Purchase.is_paid == False), Purchase.prepayment),
+                    # иначе цена = цене
                     else_=Purchase.price
                 )
             ))
@@ -79,6 +82,7 @@ class BaseOrder(db.Model):
         )
     )
 
+    # вычисляемое свойство для получения предоплаты из покупок в заказе
     prepayment = column_property(
         func.coalesce(
             select(func.sum(Purchase.prepayment))
@@ -167,9 +171,8 @@ class Cart(BaseOrder):
     REPR_MODEL_NAME = 'корзина'
 
     id: Mapped[int] = mapped_column(ForeignKey("base_order.id"), primary_key=True)
-    cart_uuid: Mapped[str] = mapped_column(unique=True)
+    cart_uuid: Mapped[str] = mapped_column(unique=True)  # uuid для получения корзины
 
     __mapper_args__ = {
         'polymorphic_identity': 'cart',
     }
-

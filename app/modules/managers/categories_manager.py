@@ -11,16 +11,31 @@ from ..settings import settings
 
 
 class CategoriesManager:
+    """
+    Класс для управления категориями
+    """
     @staticmethod
     def pick_room(category: Category, start: date, end: date, purchase_id: Optional[int] = None):
+        """
+        Поиск свободной комнаты категории
+        :param category: категория, у которой нужно найти комнату
+        :param start: дата начала брони
+        :param end: дата конца брони
+        :param purchase_id: id покупки, если нужно подобрать комнату для обновления покупки, а не создания новой
+        :return: id комнаты, если нашлась подходящая, иначе None
+        """
+        # комнат категории
         rooms = db.session.query(Room).filter(
             Room.date_deleted == None,
             Room.category_id == category.id,
         ).with_entities(Room.id).all()
+        # id комнат категории
         free_rooms = {item[0] for item in rooms}
+        # обявления первого дня проверки
         day_to_check = start
 
         while free_rooms and day_to_check < end:
+            # занятые комнаты на проверяемую дату
             busy_rooms = db.session.query(Purchase).filter(
                 Purchase.room_id.in_(free_rooms),
                 Purchase.is_canceled == False,
@@ -29,21 +44,24 @@ class CategoriesManager:
                 Purchase.id != purchase_id
             ).with_entities(Purchase.room_id).all()
 
+            # убираем занятые комнаты
             free_rooms -= {item[0] for item in busy_rooms}
+            # передвигаем день
             day_to_check += timedelta(days=1)
 
         if not free_rooms:
             return None
 
+        # т.к. может вернуться несколько подходящих комнат, возвращаем первую
         picked_room_id = list(free_rooms)[0]
         return picked_room_id
 
     @staticmethod
     def get_familiar(category: Category):
         """
-        Получение похожих комнат (с похожими тегами)
-        :param category:
-        :return:
+        Получение похожих категория (с похожими тегами)
+        :param category:  категория, для которой нужно найти похожие категории
+        :return: список похожих категорий
         """
 
         # Получаем id тегов переданной категории

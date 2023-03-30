@@ -5,6 +5,9 @@ from ..settings import settings
 
 
 class ClientsManager:
+    """
+    Класс для управления клиентами
+    """
     @staticmethod
     def save_client(client: Client):
         db.session.add(client)

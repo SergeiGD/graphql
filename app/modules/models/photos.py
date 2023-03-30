@@ -1,7 +1,6 @@
-from datetime import datetime
 from .base import db
-from sqlalchemy.orm import Mapped, mapped_column, relationship, validates, Session
-from sqlalchemy import ForeignKey, event, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
+from sqlalchemy import ForeignKey
 import modules.models.categories as categories
 
 

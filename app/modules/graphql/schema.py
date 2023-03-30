@@ -11,6 +11,7 @@ type_defs = """
         clients(clientId: Int): [Client]!
         orders(orderId: Int): [Order]!
         purchases(purchaseId: Int): [Purchase]!
+        sales(saleId: Int): [Sale]!
     }
     
     type Mutation {
@@ -41,6 +42,10 @@ type_defs = """
         createPurchase(
             input: CreatePurchaseInput!
         ): PurchaseResult!
+        
+        createSale(
+            input: CreateSaleInput!
+        ): SaleResult!
         
         updatePhoto(
             id: Int!
@@ -77,14 +82,58 @@ type_defs = """
             input: UpdatePurchaseInput!
         ): PurchaseResult!
         
+        updateSale(
+            id: Int!
+            input: UpdateSaleInput!
+        ): SaleResult!
+        
+        deleteRoom(
+            id: Int!
+        ): DeleteResult!
+        
+        deletePhoto(
+            id: Int!
+        ): DeleteResult!
+        
+        deleteSale(
+            id: Int!
+        ): DeleteResult!
+        
+        deleteCategory(
+            id: Int!
+        ): DeleteResult!
+        
+        deleteTag(
+            id: Int!
+        ): DeleteResult!
+        
         cancelPurchase(
             id: Int!
-        ): MutationStatus!
+        ): PurchaseResult!
+        
+        cancelOrder(
+            id: Int!
+        ): OrderResult!
         
         addTagToCategory(
             tagId: Int!
             categoryId: Int!
         ): TagCategoryResult!
+        
+        addSaleToCategory(
+            saleId: Int!
+            categoryId: Int!
+        ): SaleCategoryResult!
+        
+        removeTagFromCategory(
+            tagId: Int!
+            categoryId: Int!
+        ): TagCategoryResult!
+        
+        removeSaleFromCategory(
+            saleId: Int!
+            categoryId: Int!
+        ): SaleCategoryResult!
     }
     
     input CreateRoomInput {
@@ -132,6 +181,15 @@ type_defs = """
         orderId: Int!
     }
     
+    input CreateSaleInput {
+        name: String!
+        description: String!
+        discount: Float!
+        image_path: String!
+        startDate: Datetime!
+        endDate: Datetime!
+    }
+    
     input UpdatePhotoInput {
         path: String
         order: Int
@@ -163,6 +221,15 @@ type_defs = """
     
     input UpdateTagInput {
         name: String
+    }
+    
+    input UpdateSaleInput {
+        name: String
+        description: String
+        discount: Float
+        image_path: String
+        startDate: Datetime
+        endDate: Datetime
     }
     
     input UpdateOrderInput {
@@ -211,10 +278,25 @@ type_defs = """
         purchase: Purchase
     }
     
+    type SaleResult {
+        status: MutationStatus!
+        sale: Sale
+    }
+    
     type TagCategoryResult {
         status: MutationStatus!
         tag: Tag
         category: Category
+    }
+    
+    type SaleCategoryResult {
+        status: MutationStatus!
+        sale: Sale
+        category: Category
+    }
+    
+    type DeleteResult {
+        status: MutationStatus!
     }
     
     type MutationStatus {
@@ -223,11 +305,13 @@ type_defs = """
     }
     
     type Room {
+        id: Int!
         roomNumber: Int!
         category: Category!
     }
     
     type Photo {
+        id: Int!
         order: Int!
         category: Category!
         path: String!
@@ -253,6 +337,8 @@ type_defs = """
         square: Float!
         tags: [Tag]!
         rooms: [Room]!
+        familiar: [Category]!
+        sales: [Sale]!
     }
     
     type Client {
@@ -287,12 +373,22 @@ type_defs = """
         end: Date!
         price: Float!
         prepayment: Float!
-        refund: String
+        refund: Float
         isPaid: Boolean!
         isPrepaymentPaid: Boolean!
-        isRefundMade: Boolean!
         isCanceled: Boolean!
         order: Order!
         room: Room!
+    }
+    
+    type Sale {
+        id: Int!
+        name: String!
+        description: String!
+        discount: Float!
+        image_path: String!
+        startDate: Datetime!
+        endDate: Datetime!
+        categories: [Category]!
     }
 """

@@ -3,6 +3,7 @@ from _decimal import Decimal
 from datetime import datetime
 from ..settings import settings
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
+from sqlalchemy.types import DECIMAL
 from .base import db
 import modules.models.rooms as rooms
 import modules.models.tags as tags
@@ -17,7 +18,7 @@ class Category(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
     description: Mapped[str]
-    price: Mapped[Decimal]
+    price: Mapped[Decimal] = mapped_column(DECIMAL(precision=10, scale=2))
     prepayment_percent: Mapped[float]
     refund_percent: Mapped[float]
     main_photo_path: Mapped[str]

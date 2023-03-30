@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, validates
 from sqlalchemy import Column, Table, ForeignKey
 from typing import List
 from .base import db
@@ -26,4 +26,14 @@ class Tag(db.Model):
         secondary=category_tag,
         back_populates='tags',
     )
+
+    @validates('name')
+    def validate_name(self, key, name):
+        if db.session.query(
+                db.session.query(Tag).filter(
+                    Tag.name == name
+                ).exists()
+        ).scalar():
+            raise ValueError('Уже есть тег с таким наименованием')
+        return name
 

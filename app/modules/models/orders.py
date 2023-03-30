@@ -2,6 +2,7 @@ from typing import Optional, List
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates, Session, column_property
 from sqlalchemy import ForeignKey, func, select, event, case, and_
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.types import DECIMAL
 from _decimal import Decimal
 from datetime import datetime, date
 from ..settings import settings
@@ -13,16 +14,16 @@ import modules.models.rooms as rooms
 
 class Purchase(db.Model):
     __tablename__ = 'purchase'
+    REPR_MODEL_NAME = 'покупка'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     start: Mapped[date]
     end: Mapped[date]
-    price: Mapped[Decimal] = mapped_column(default=0)
-    prepayment: Mapped[Decimal] = mapped_column(default=0)
-    refund: Mapped[Decimal] = mapped_column(default=0)
+    price: Mapped[Decimal] = mapped_column(DECIMAL(precision=10, scale=2), default=0)
+    prepayment: Mapped[Decimal] = mapped_column(DECIMAL(precision=10, scale=2), default=0)
+    refund: Mapped[Decimal] = mapped_column(DECIMAL(precision=10, scale=2), default=0)
     is_paid: Mapped[bool] = mapped_column(default=False)
     is_prepayment_paid: Mapped[bool] = mapped_column(default=False)
-    is_refund_made: Mapped[bool] = mapped_column(default=False)
     is_canceled: Mapped[bool] = mapped_column(default=False)
 
     order_id: Mapped[int] = mapped_column(ForeignKey('base_order.id'))
@@ -36,9 +37,11 @@ class Purchase(db.Model):
         if not db.session.query(
                 Order.query.filter(
                     Order.id == order_id,
+                    Order.date_canceled == None,
+                    Order.date_finished == None,
                 ).exists()
         ).scalar():
-            raise ValueError('Не найден заказ с таким id')
+            raise ValueError('Не найден активный заказ с таким id')
 
         return order_id
 
@@ -99,8 +102,8 @@ class Order(BaseOrder):
     id: Mapped[int] = mapped_column(ForeignKey("base_order.id"), primary_key=True)
 
     comment: Mapped[Optional[str]]
-    paid: Mapped[Decimal] = mapped_column(default=0)
-    refunded: Mapped[Decimal] = mapped_column(default=0)
+    paid: Mapped[Decimal] = mapped_column(DECIMAL(precision=10, scale=2), default=0)
+    refunded: Mapped[Decimal] = mapped_column(DECIMAL(precision=10, scale=2), default=0)
     date_full_prepayment: Mapped[Optional[datetime]]
     date_full_paid: Mapped[Optional[datetime]]
     date_finished: Mapped[Optional[datetime]]

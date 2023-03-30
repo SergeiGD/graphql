@@ -3,7 +3,7 @@ from ..settings import settings
 from sqlalchemy.orm import Mapped, relationship, mapped_column, validates
 from typing import List, Optional
 from .base import db
-from sqlalchemy import Column, Table, ForeignKey
+from sqlalchemy import Column, Table, ForeignKey, event
 import modules.models.categories as categories
 
 
@@ -40,14 +40,11 @@ class Sale(db.Model):
             raise ValueError('Размер скидки должен быть больше 0 и меньше 100')
         return discount
 
-    @validates('start_date', 'end_date')
-    def validate_dates(self, key, field):
-        if key == 'start_date' and isinstance(self.start_date, datetime):
-            if field >= self.end_date:
-                raise ValueError('Начало должно быть раньше конца')
 
-        if key == 'end_date' and isinstance(self.end_date, datetime):
-            if self.start_date >= field:
-                raise ValueError('Начало должно быть раньше конца')
+def validate_dates(mapper, connection, target: Sale):
+    if target.start_date >= target.end_date:
+        raise ValueError('Начало должно быть раньше конца')
 
-        return field
+
+event.listen(Sale, 'before_insert', validate_dates)
+event.listen(Sale, 'before_update', validate_dates)

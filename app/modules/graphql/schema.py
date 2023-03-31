@@ -3,15 +3,24 @@ type_defs = """
     scalar Date
 
     type Query {
-        hello: String!
         tags(tagId: Int): [Tag]!
-        categories(catId: Int): [Category]!
-        rooms(roomId: Int): [Room]!
+        getCategories(catId: Int): CategoriesResult!
+        getRooms(roomId: Int): RoomsResult!
         photos(photoId: Int): [Photo]!
         clients(clientId: Int): [Client]!
         orders(orderId: Int): [Order]!
         purchases(purchaseId: Int): [Purchase]!
         sales(saleId: Int): [Sale]!
+    }
+    
+    type RoomsResult {
+        status: MutationStatus!
+        rooms: [Room]
+    }
+    
+     type CategoriesResult {
+        status: MutationStatus!
+        categories: [Category]
     }
     
     type Mutation {
@@ -134,6 +143,19 @@ type_defs = """
             saleId: Int!
             categoryId: Int!
         ): SaleCategoryResult!
+        
+        login(
+            login: String!
+            password: String!
+        ): LoginResult!
+        
+        singUp(
+            input: SingUpInput!
+        ): ClientResult!
+        
+        refreshToken(
+            refreshToken: String!
+        ): LoginResult!
     }
     
     input CreateRoomInput {
@@ -243,10 +265,17 @@ type_defs = """
         end: Date
     }
     
+    input SingUpInput {
+        email: String!
+        password: String!
+    }
+    
     type RoomResult {
         status: MutationStatus!
         room: Room
     }
+    
+
     
     type ClientResult {
         status: MutationStatus!
@@ -276,6 +305,11 @@ type_defs = """
     type PurchaseResult {
         status: MutationStatus!
         purchase: Purchase
+    }
+    
+    type LoginResult {
+        status: MutationStatus!
+        tokens: AuthTokens
     }
     
     type SaleResult {
@@ -336,7 +370,7 @@ type_defs = """
         beds: Int!
         square: Float!
         tags: [Tag]!
-        rooms: [Room]!
+        getRooms: RoomsResult
         familiar: [Category]!
         sales: [Sale]!
     }
@@ -390,5 +424,10 @@ type_defs = """
         startDate: Datetime!
         endDate: Datetime!
         categories: [Category]!
+    }
+    
+    type AuthTokens {
+        access_token: String!
+        refresh_token: String!
     }
 """

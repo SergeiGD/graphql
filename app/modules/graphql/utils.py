@@ -1,4 +1,9 @@
 from typing import Any
+from functools import wraps
+from flask import current_app
+import jwt
+from jwt.exceptions import DecodeError, ExpiredSignatureError
+from ..models.users import User
 
 
 def return_validation_error(validation_error: Exception):
@@ -34,3 +39,51 @@ def update_fields(obj: Any, data: dict):
     """
     for attr, value in data.items():
         setattr(obj, attr, value)
+
+
+def token_required(f):
+    """
+    Докератор для резольверов для проверка авторизации (токена) и получения текущего авторизованного пользователя
+    :param f:
+    :return:
+    """
+    @wraps(f)
+    def decorated_token(*args, **kwargs):
+        info = args[1]  # втором аргументом резольверу всегда приходит информация о запросе
+        request = info.context['request']  # получаем реквест
+        auth_header = request.headers.get('Authorization', '')  # получаем значения в заголовке Authorization
+        keys = auth_header.split()  # т.к. это будет строка вида Bearer token, приводим ее к списку для удобства
+
+        # проверяем в правильном ли формате пришел заголовок
+        if len(keys) < 2 or keys[0] != 'Bearer':
+            return {'status': {
+                'success': False,
+                'error': f'Отсутствует или имеет неверный формат токен доступа (заголовок Authorization, ключ Bearer)',
+            }}
+        try:
+            # вторым элементов у нас лежит сам токен
+            token = keys[1]
+            # пытаемся декодировать токен
+            payload = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+        except (DecodeError, ExpiredSignatureError):
+            return {'status': {
+                'success': False,
+                'error': f'Недействительный токен доступа',
+            }}
+
+        # проверяем, что пришел access, а не refresh токен
+        if payload['is_refresh_token']:
+            return {'status': {
+                'success': False,
+                'error': f'Недействительный токен доступа',
+            }}
+
+        # получаем пользователя из payload'а токена
+        current_user = User.query.filter_by(
+            id=payload['id']
+        ).first()
+        # пихаем полученного пользователя в аргументы резольвера
+        kwargs['current_user'] = current_user
+        return f(*args, **kwargs)
+
+    return decorated_token

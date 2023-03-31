@@ -4,7 +4,7 @@ from ...models.tags import Tag
 from ...models.sales import Sale
 from ...models.base import db
 from ...managers.categories_manager import CategoriesManager
-from ..utils import return_validation_error, return_not_found_error, update_fields
+from ..utils import return_validation_error, return_not_found_error, update_fields, token_required
 
 
 def resolve_create_category(*_, input: dict):
@@ -47,10 +47,30 @@ def resolve_delete_category(*_, id: int):
     }}
 
 
-def resolve_categories(*_, cat_id: Optional[int] = None):
+@token_required
+def resolve_categories(*_, cat_id: Optional[int] = None, current_user):
     if cat_id:
-        return db.session.query(Category).filter_by(id=cat_id, date_deleted=None)
-    return db.session.query(Category).filter_by(date_deleted=None)
+        category = db.session.query(Category).filter_by(id=cat_id, date_deleted=None)
+        return {'categories': category, 'status': {
+            'success': True,
+        }}
+    categories = db.session.query(Category).filter_by(date_deleted=None)
+    return {'categories': categories, 'status': {
+        'success': True,
+    }}
+
+
+def resolve_category_familiar(obj: Category, *_):
+    return CategoriesManager.get_familiar(obj)
+
+
+@token_required
+def resolve_category_rooms(obj: Category, *_, current_user):
+    # TODO: для контроля прав на просмотр связанных объектов так надо вот тут вручную
+    print(current_user.email)
+    return {'rooms': obj.rooms, 'status': {
+        'success': True,
+    }}
 
 
 def resolve_add_tag_to_category(*_, tag_id: int, category_id: int):
@@ -126,12 +146,4 @@ def resolve_remove_sale_from_category(*_, sale_id: int, category_id: int):
         'success': True,
     }}
 
-
-def resolve_category_familiar(obj: Category, *_):
-    return CategoriesManager.get_familiar(obj)
-
-
-def resolve_category_rooms(obj: Category, *_):
-    # TODO: для контроля прав на просмотр связанных объектов так надо вот тут вручную
-    return obj.rooms
 

@@ -3,10 +3,15 @@ from ariadne import gql, make_executable_schema, graphql_sync
 from ariadne.types import GraphQLResolveInfo
 from ariadne.explorer import ExplorerGraphiQL
 from flask import Flask, jsonify, request
+from flask_jwt_extended import create_access_token, create_refresh_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
 from modules.models.base import db
 from modules.graphql.schema import type_defs
 from modules.graphql.types import mutation, query, category, datetime_scalar, date_scalar
 
+# TODO: банить jwt refresh токены после использования
 # TODO: корзина
 # TODO: права
 # TODO: поиск
@@ -24,6 +29,7 @@ schema = make_executable_schema(
 )
 explorer_html = ExplorerGraphiQL().html(None)
 app = Flask(__name__)
+app.config['SECRET_KEY'] = environ.get('SECRET_KEY', 'my_very_secret_key')
 
 
 @app.route("/graphql", methods=["GET"])
@@ -49,12 +55,13 @@ if __name__ == "__main__":
     db_name = environ.get('DB_NAME', 'db_graphql')
     db_user = environ.get('DB_USER', 'db_user')
     db_password = environ.get('DB_PASSWORD', 'db_password')
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql+psycopg2://{db_user}:{db_password}@db/{db_name}'
-
+    # app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql+psycopg2://{db_user}:{db_password}@db/{db_name}'
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql+psycopg2://sergei:fefepi26@localhost/graphql'
     db.init_app(app)
     with app.app_context():
         db.create_all()
-    app.run(debug=True, host='0.0.0.0')
+    # app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True)
 
 
 

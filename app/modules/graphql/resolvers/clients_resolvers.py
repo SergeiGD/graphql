@@ -2,10 +2,12 @@ from typing import Optional
 from ...models.users import Client
 from ...models.base import db
 from ...managers.clients_manager import ClientsManager
-from ..utils import return_validation_error, return_not_found_error, update_fields
+from ..utils import return_validation_error, return_not_found_error, update_fields, token_required, permission_required
 
 
-def resolve_create_client(*_, input: dict):
+@token_required
+@permission_required(permissions=['add_client'])
+def resolve_create_client(*_, input: dict, current_user):
     try:
         client = Client(**input)
         ClientsManager.save_client(client)
@@ -16,7 +18,9 @@ def resolve_create_client(*_, input: dict):
     }}
 
 
-def resolve_update_client(*_, id: int, input: dict):
+@token_required
+@permission_required(permissions=['edit_client'])
+def resolve_update_client(*_, id: int, input: dict, current_user):
     client: Client = db.session.query(Client).filter(
         Client.id == id,
         Client.date_deleted == None
@@ -33,7 +37,15 @@ def resolve_update_client(*_, id: int, input: dict):
     }}
 
 
-def resolve_clients(*_, client_id: Optional[int] = None):
+@token_required
+@permission_required(permissions=['show_client'])
+def resolve_clients(*_, client_id: Optional[int] = None, current_user):
     if client_id:
-        return db.session.query(Client).filter_by(id=client_id, date_deleted=None)
-    return db.session.query(Client).filter_by(date_deleted=None)
+        client = db.session.query(Client).filter_by(id=client_id, date_deleted=None)
+        return {'clients': client, 'status': {
+            'success': True,
+        }}
+    clients = db.session.query(Client).filter_by(date_deleted=None).all()
+    return {'clients': clients, 'status': {
+        'success': True,
+    }}

@@ -4,10 +4,12 @@ from ...models.tags import Tag
 from ...models.sales import Sale
 from ...models.base import db
 from ...managers.categories_manager import CategoriesManager
-from ..utils import return_validation_error, return_not_found_error, update_fields, token_required
+from ..utils import return_validation_error, return_not_found_error, update_fields, token_required, permission_required
 
 
-def resolve_create_category(*_, input: dict):
+@token_required
+@permission_required(permissions=['add_category'])
+def resolve_create_category(*_, input: dict, current_user):
     try:
         category = Category(**input)
         CategoriesManager.save_category(category)
@@ -18,7 +20,9 @@ def resolve_create_category(*_, input: dict):
     }}
 
 
-def resolve_update_category(*_, id: int, input: dict):
+@token_required
+@permission_required(permissions=['edit_category'])
+def resolve_update_category(*_, id: int, input: dict, current_user):
     category: Category = db.session.query(Category).filter(
         Category.id == id
     ).first()
@@ -34,7 +38,9 @@ def resolve_update_category(*_, id: int, input: dict):
     }}
 
 
-def resolve_delete_category(*_, id: int):
+@token_required
+@permission_required(permissions=['delete_category'])
+def resolve_delete_category(*_, id: int, current_user):
     category: Category = db.session.query(Category).filter(
         Category.id == id,
         Category.date_deleted == None,
@@ -47,8 +53,7 @@ def resolve_delete_category(*_, id: int):
     }}
 
 
-@token_required
-def resolve_categories(*_, cat_id: Optional[int] = None, current_user):
+def resolve_categories(*_, cat_id: Optional[int] = None):
     if cat_id:
         category = db.session.query(Category).filter_by(id=cat_id, date_deleted=None)
         return {'categories': category, 'status': {
@@ -65,15 +70,8 @@ def resolve_category_familiar(obj: Category, *_):
 
 
 @token_required
-def resolve_category_rooms(obj: Category, *_, current_user):
-    # TODO: для контроля прав на просмотр связанных объектов так надо вот тут вручную
-    print(current_user.email)
-    return {'rooms': obj.rooms, 'status': {
-        'success': True,
-    }}
-
-
-def resolve_add_tag_to_category(*_, tag_id: int, category_id: int):
+@permission_required(permissions=['edit_category', 'edit_tag'])
+def resolve_add_tag_to_category(*_, tag_id: int, category_id: int, current_user):
     tag: Tag = db.session.query(Tag).filter(
         Tag.id == tag_id
     ).first()
@@ -91,7 +89,9 @@ def resolve_add_tag_to_category(*_, tag_id: int, category_id: int):
     }}
 
 
-def resolve_remove_tag_from_category(*_, tag_id: int, category_id: int):
+@token_required
+@permission_required(permissions=['edit_category', 'edit_tag'])
+def resolve_remove_tag_from_category(*_, tag_id: int, category_id: int, current_user):
     tag: Tag = db.session.query(Tag).filter(
         Tag.id == tag_id
     ).first()
@@ -109,7 +109,9 @@ def resolve_remove_tag_from_category(*_, tag_id: int, category_id: int):
     }}
 
 
-def resolve_add_sale_to_category(*_, sale_id: int, category_id: int):
+@token_required
+@permission_required(permissions=['edit_category', 'edit_sale'])
+def resolve_add_sale_to_category(*_, sale_id: int, category_id: int, current_user):
     sale: Sale = db.session.query(Sale).filter(
         Sale.id == sale_id,
         Sale.date_deleted == None,
@@ -128,7 +130,9 @@ def resolve_add_sale_to_category(*_, sale_id: int, category_id: int):
     }}
 
 
-def resolve_remove_sale_from_category(*_, sale_id: int, category_id: int):
+@token_required
+@permission_required(permissions=['edit_category', 'edit_sale'])
+def resolve_remove_sale_from_category(*_, sale_id: int, category_id: int, current_user):
     sale: Sale = db.session.query(Sale).filter(
         Sale.id == sale_id,
         Sale.date_deleted == None,

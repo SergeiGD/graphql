@@ -2,10 +2,12 @@ from typing import Optional
 from ...models.orders import Order
 from ...models.base import db
 from ...managers.orders_manager import OrdersManager
-from ..utils import return_validation_error, return_not_found_error, update_fields
+from ..utils import return_validation_error, return_not_found_error, update_fields, token_required, permission_required
 
 
-def resolve_create_order(*_, input: dict):
+@token_required
+@permission_required(permissions=['add_order'])
+def resolve_create_order(*_, input: dict, current_user):
     try:
         order = Order(**input)
         OrdersManager.save_order(order)
@@ -16,7 +18,9 @@ def resolve_create_order(*_, input: dict):
     }}
 
 
-def resolve_update_order(*_, id: int, input: dict):
+@token_required
+@permission_required(permissions=['edit_order'])
+def resolve_update_order(*_, id: int, input: dict, current_user):
     order: Order = db.session.query(Order).filter(
         Order.id == id,
         Order.date_canceled == None,
@@ -33,7 +37,9 @@ def resolve_update_order(*_, id: int, input: dict):
     }}
 
 
-def resolve_cancel_order(*_, id: int):
+@token_required
+@permission_required(permissions=['cancel_order'])
+def resolve_cancel_order(*_, id: int, current_user):
     order: Order = db.session.query(Order).filter(
         Order.id == id,
         Order.date_canceled == None,
@@ -46,9 +52,31 @@ def resolve_cancel_order(*_, id: int):
     }}
 
 
-def resolve_orders(*_, order_id: Optional[int] = None):
+@token_required
+@permission_required(permissions=['show_order'])
+def resolve_orders(*_, order_id: Optional[int] = None, current_user):
     if order_id:
-        return db.session.query(Order).filter_by(id=order_id)
-    return db.session.query(Order).all()
+        order = db.session.query(Order).filter_by(id=order_id)
+        return {'orders': order, 'status': {
+            'success': True,
+        }}
+    orders = db.session.query(Order).all()
+    return {'orders': orders, 'status': {
+        'success': True,
+    }}
 
 
+@token_required
+@permission_required(permissions=['show_purchase'])
+def resolve_order_purchases(obj: Order, *_, current_user):
+    return {'purchases': obj.purchases, 'status': {
+        'success': True,
+    }}
+
+
+@token_required
+@permission_required(permissions=['show_purchase'])
+def resolve_order_client(obj: Order, *_, current_user):
+    return {'client': obj.client, 'status': {
+        'success': True,
+    }}

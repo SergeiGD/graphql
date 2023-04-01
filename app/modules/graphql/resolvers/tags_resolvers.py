@@ -2,10 +2,12 @@ from typing import Optional
 from ...models.tags import Tag
 from ...models.base import db
 from ...managers.tags_manager import TagsManager
-from ..utils import return_validation_error, return_not_found_error, update_fields
+from ..utils import return_validation_error, return_not_found_error, update_fields, token_required, permission_required
 
 
-def resolve_create_tag(*_, input: dict):
+@token_required
+@permission_required(permissions=['add_tag'])
+def resolve_create_tag(*_, input: dict, current_user):
     try:
         tag = Tag(**input)
         TagsManager.save_tag(tag)
@@ -16,7 +18,9 @@ def resolve_create_tag(*_, input: dict):
     }}
 
 
-def resolve_update_tag(*_, id: int, input: dict):
+@token_required
+@permission_required(permissions=['edit_tag'])
+def resolve_update_tag(*_, id: int, input: dict, current_user):
     tag: Tag = db.session.query(Tag).filter(
         Tag.id == id
     ).first()
@@ -32,7 +36,9 @@ def resolve_update_tag(*_, id: int, input: dict):
     }}
 
 
-def resolve_delete_tag(*_, id: int):
+@token_required
+@permission_required(permissions=['delete_tag'])
+def resolve_delete_tag(*_, id: int, current_user):
     tag: Tag = db.session.query(Tag).filter(
         Tag.id == id,
     ).first()
@@ -46,5 +52,11 @@ def resolve_delete_tag(*_, id: int):
 
 def resolve_tags(*_, tag_id: Optional[int] = None):
     if tag_id:
-        return db.session.query(Tag).filter_by(id=tag_id)
-    return db.session.query(Tag).all()
+        tag = db.session.query(Tag).filter_by(id=tag_id)
+        return {'tags': tag, 'status': {
+            'success': True,
+        }}
+    tags = db.session.query(Tag).all()
+    return {'tags': tags, 'status': {
+        'success': True,
+    }}

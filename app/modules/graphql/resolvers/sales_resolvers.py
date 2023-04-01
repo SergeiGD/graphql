@@ -2,10 +2,12 @@ from typing import Optional
 from ...models.sales import Sale
 from ...models.base import db
 from ...managers.sales_manager import SalesManager
-from ..utils import return_validation_error, return_not_found_error, update_fields
+from ..utils import return_validation_error, return_not_found_error, update_fields, token_required, permission_required
 
 
-def resolve_create_sale(*_, input: dict):
+@token_required
+@permission_required(permissions=['add_sale'])
+def resolve_create_sale(*_, input: dict, current_user):
     try:
         sale = Sale(**input)
         SalesManager.save_sale(sale)
@@ -16,7 +18,9 @@ def resolve_create_sale(*_, input: dict):
     }}
 
 
-def resolve_update_sale(*_, id: int, input: dict):
+@token_required
+@permission_required(permissions=['edit_sale'])
+def resolve_update_sale(*_, id: int, input: dict, current_user):
     sale: Sale = db.session.query(Sale).filter(
         Sale.id == id
     ).first()
@@ -32,7 +36,9 @@ def resolve_update_sale(*_, id: int, input: dict):
     }}
 
 
-def resolve_delete_sale(*_, id: int):
+@token_required
+@permission_required(permissions=['delete_sale'])
+def resolve_delete_sale(*_, id: int, current_user):
     sale: Sale = db.session.query(Sale).filter(
         Sale.id == id,
         Sale.date_deleted == None,
@@ -47,7 +53,11 @@ def resolve_delete_sale(*_, id: int):
 
 def resolve_sales(*_, sale_id: Optional[int] = None):
     if sale_id:
-        return db.session.query(Sale).filter_by(id=sale_id, date_deleted=None)
-    return db.session.query(Sale).filter_by(date_deleted=None)
-
-
+        sale = db.session.query(Sale).filter_by(id=sale_id, date_deleted=None)
+        return {'sales': sale, 'status': {
+            'success': True,
+        }}
+    sales = db.session.query(Sale).filter_by(date_deleted=None)
+    return {'sales': sales, 'status': {
+        'success': True,
+    }}

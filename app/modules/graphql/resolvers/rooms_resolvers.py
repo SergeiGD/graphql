@@ -2,11 +2,12 @@ from typing import Optional
 from ...models.rooms import Room
 from ...models.base import db
 from ...managers.rooms_manager import RoomsManager
-from ..utils import return_validation_error, return_not_found_error, update_fields, token_required
-from ariadne.types import GraphQLResolveInfo
+from ..utils import return_validation_error, return_not_found_error, update_fields, token_required, permission_required
 
 
-def resolve_create_room(*_, input: dict):
+@token_required
+@permission_required(permissions=['add_room'])
+def resolve_create_room(*_, input: dict, current_user):
     try:
         room = Room(**input)
         RoomsManager.save_room(room)
@@ -17,7 +18,9 @@ def resolve_create_room(*_, input: dict):
     }}
 
 
-def resolve_update_room(*_, id: int, input: dict):
+@token_required
+@permission_required(permissions=['edit_room'])
+def resolve_update_room(*_, id: int, input: dict, current_user):
     room: Room = db.session.query(Room).filter(
         Room.id == id,
         Room.date_deleted == None
@@ -34,7 +37,9 @@ def resolve_update_room(*_, id: int, input: dict):
     }}
 
 
-def resolve_delete_room(*_, id: int):
+@token_required
+@permission_required(permissions=['delete_room'])
+def resolve_delete_room(*_, id: int, current_user):
     room: Room = db.session.query(Room).filter(
         Room.id == id,
         Room.date_deleted == None
@@ -47,8 +52,7 @@ def resolve_delete_room(*_, id: int):
     }}
 
 
-@token_required
-def resolve_rooms(*_, room_id: Optional[int] = None, current_user):
+def resolve_rooms(*_, room_id: Optional[int] = None):
     if room_id:
         room = db.session.query(Room).filter_by(id=room_id, date_deleted=None)
         return {'rooms': room, 'status': {

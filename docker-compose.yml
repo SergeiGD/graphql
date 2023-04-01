@@ -4,7 +4,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./Dockerfile_app
     container_name: graphql_app
     volumes:
       - ./app/:/app/
@@ -17,7 +17,9 @@ services:
       - ./.env
 
   db:
-    image: postgres:15.1-alpine3.16
+    build:
+      context: .
+      dockerfile: ./Dockerfile_db
     container_name: graphql_db
     volumes:
       - ./postgres_data:/var/lib/postgresql/data/
@@ -29,5 +31,6 @@ services:
       - ${DB_PORT}:5432
     env_file:
       - ./.env
+
 
 

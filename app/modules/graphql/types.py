@@ -1,4 +1,4 @@
-from ariadne import QueryType, ObjectType, MutationType, ScalarType
+from ariadne import QueryType, ObjectType, MutationType, ScalarType, UnionType
 from .scalars.date_scalar import serialize_date, parse_date_value
 from .scalars.datetime_scalar import serialize_datetime, parse_datetime_value
 from .resolvers.tags_resolvers import resolve_create_tag, resolve_update_tag, resolve_delete_tag, resolve_tags
@@ -6,25 +6,44 @@ from .resolvers.photos_resolvers import resolve_create_photo, resolve_update_pho
 from .resolvers.rooms_resolvers import resolve_create_room, resolve_update_room, resolve_delete_room, resolve_rooms
 from .resolvers.sales_resolvers import resolve_create_sale, resolve_update_sale, resolve_delete_sale, resolve_sales
 from .resolvers.clients_resolvers import resolve_create_client, resolve_update_client, resolve_clients
-from .resolvers.orders_resolvers import resolve_create_order, resolve_update_order, resolve_cancel_order, resolve_orders
-from .resolvers.purchases_resolvers import resolve_create_purchase, resolve_update_purchase, resolve_cancel_purchase, resolve_purchases
+from .resolvers.orders_resolvers import (
+    resolve_create_order, resolve_update_order, resolve_cancel_order, resolve_orders,
+    resolve_order_purchases, resolve_order_client
+)
+from .resolvers.purchases_resolvers import (
+    resolve_create_purchase, resolve_update_purchase, resolve_cancel_purchase,
+    resolve_purchases, resolve_purchase_order
+)
+from .resolvers.permissions_resolvers import resolve_permissions
 from .resolvers.categories_resolvers import (
     resolve_create_category, resolve_update_category, resolve_delete_category, resolve_categories,
     resolve_add_tag_to_category, resolve_remove_tag_from_category,
     resolve_add_sale_to_category, resolve_remove_sale_from_category,
-    resolve_category_familiar, resolve_category_rooms
+    resolve_category_familiar
+)
+from .resolvers.workers_resolvers import (
+    resolve_create_worker, resolve_update_worker, resolve_workers,
+    resolve_add_group_to_worker, resolve_remove_group_from_worker, resolve_worker_groups
+)
+from .resolvers.groups_resolvers import (
+    resolve_create_group, resolve_update_group, resolve_delete_group, resolve_groups, resolve_group_permissions,
+    resolve_add_permission_to_group, resolve_remove_permission_from_group, resolve_group_users
 )
 from .resolvers.auth_resolvers import resolve_login, resolve_sing_up, resolve_refresh
+from .resolvers.users_resolvers import resolve_user_type
 
 query = QueryType()
-query.set_field('tags', resolve_tags)
-query.set_field('photos', resolve_photos)
+query.set_field('getTags', resolve_tags)
+query.set_field('getPhotos', resolve_photos)
 query.set_field('getRooms', resolve_rooms)
-query.set_field('sales', resolve_sales)
+query.set_field('getSales', resolve_sales)
 query.set_field('getCategories', resolve_categories)
-query.set_field('clients', resolve_clients)
-query.set_field('orders', resolve_orders)
-query.set_field('purchases', resolve_purchases)
+query.set_field('getClients', resolve_clients)
+query.set_field('getOrders', resolve_orders)
+query.set_field('getPurchases', resolve_purchases)
+query.set_field('getWorkers', resolve_workers)
+query.set_field('getGroups', resolve_groups)
+query.set_field('getPermissions', resolve_permissions)
 
 mutation = MutationType()
 mutation.set_field('createTag', resolve_create_tag)
@@ -36,6 +55,9 @@ mutation.set_field('deletePhoto', resolve_delete_photo)
 mutation.set_field('createRoom', resolve_create_room)
 mutation.set_field('updateRoom', resolve_update_room)
 mutation.set_field('deleteRoom', resolve_delete_room)
+mutation.set_field('createGroup', resolve_create_group)
+mutation.set_field('updateGroup', resolve_update_group)
+mutation.set_field('deleteGroup', resolve_delete_group)
 mutation.set_field('createRoom', resolve_create_room)
 mutation.set_field('updateRoom', resolve_update_room)
 mutation.set_field('deleteRoom', resolve_delete_room)
@@ -47,6 +69,8 @@ mutation.set_field('updateCategory', resolve_update_category)
 mutation.set_field('deleteCategory', resolve_delete_category)
 mutation.set_field('createClient', resolve_create_client)
 mutation.set_field('updateClient', resolve_update_client)
+mutation.set_field('createWorker', resolve_create_worker)
+mutation.set_field('updateWorker', resolve_update_worker)
 mutation.set_field('createOrder', resolve_create_order)
 mutation.set_field('updateOrder', resolve_update_order)
 mutation.set_field('cancelOrder', resolve_cancel_order)
@@ -57,13 +81,30 @@ mutation.set_field('addTagToCategory', resolve_add_tag_to_category)
 mutation.set_field('removeTagFromCategory', resolve_remove_tag_from_category)
 mutation.set_field('addSaleToCategory', resolve_add_sale_to_category)
 mutation.set_field('removeSaleFromCategory', resolve_remove_sale_from_category)
+mutation.set_field('addGroupToWorker', resolve_add_group_to_worker)
+mutation.set_field('removeGroupFromWorker', resolve_remove_group_from_worker)
+mutation.set_field('addPermissionToGroup', resolve_add_permission_to_group)
+mutation.set_field('removePermissionFromGroup', resolve_remove_permission_from_group)
 mutation.set_field('login', resolve_login)
 mutation.set_field('singUp', resolve_sing_up)
 mutation.set_field('refreshToken', resolve_refresh)
 
 category = ObjectType('Category')
 category.set_field('familiar', resolve_category_familiar)
-category.set_field('getRooms', resolve_category_rooms)
+
+group = ObjectType('Group')
+group.set_field('permissions', resolve_group_permissions)
+group.set_field('users', resolve_group_users)
+
+order = ObjectType('Order')
+order.set_field('purchases', resolve_order_purchases)
+order.set_field('client', resolve_order_client)
+
+purchase = ObjectType('Purchase')
+purchase.set_field('order', resolve_purchase_order)
+
+worker = ObjectType('Worker')
+worker.set_field('groups', resolve_worker_groups)
 
 datetime_scalar = ScalarType('Datetime')
 datetime_scalar.set_serializer(serialize_datetime)
@@ -72,4 +113,7 @@ datetime_scalar.set_value_parser(parse_datetime_value)
 date_scalar = ScalarType('Date')
 date_scalar.set_serializer(serialize_date)
 date_scalar.set_value_parser(parse_date_value)
+
+
+user = UnionType('User', resolve_user_type)
 

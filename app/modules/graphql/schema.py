@@ -1,16 +1,20 @@
 type_defs = """
     scalar Datetime
     scalar Date
+    union User = Client | Worker
 
     type Query {
-        tags(tagId: Int): [Tag]!
+        getTags(tagId: Int): TagsResult!
         getCategories(catId: Int): CategoriesResult!
         getRooms(roomId: Int): RoomsResult!
-        photos(photoId: Int): [Photo]!
-        clients(clientId: Int): [Client]!
-        orders(orderId: Int): [Order]!
-        purchases(purchaseId: Int): [Purchase]!
-        sales(saleId: Int): [Sale]!
+        getPhotos(photoId: Int): PhotosResult!
+        getClients(clientId: Int): ClientsResult!
+        getOrders(orderId: Int): OrdersResult!
+        getPurchases(purchaseId: Int): PurchasesResult!
+        getSales(saleId: Int): SalesResult!
+        getWorkers(workerId: Int): WorkersResult!
+        getGroups(groupId: Int): GroupsResult!
+        getPermissions(permissionId: Int): PermissionsResult!
     }
     
     type RoomsResult {
@@ -21,6 +25,51 @@ type_defs = """
      type CategoriesResult {
         status: MutationStatus!
         categories: [Category]
+    }
+    
+    type WorkersResult {
+        status: MutationStatus!
+        workers: [Worker]
+    }
+    
+    type GroupsResult {
+        status: MutationStatus!
+        groups: [Group]
+    }
+    
+    type PermissionsResult {
+        status: MutationStatus!
+        permissions: [Permission]
+    }
+    
+    type ClientsResult {
+        status: MutationStatus!
+        clients: [Client]
+    }
+    
+    type OrdersResult {
+        status: MutationStatus!
+        orders: [Order]
+    }
+    
+    type PurchasesResult {
+        status: MutationStatus!
+        purchases: [Purchase]
+    }
+    
+    type PhotosResult {
+        status: MutationStatus!
+        photos: [Photo]
+    }
+    
+    type SalesResult {
+        status: MutationStatus!
+        sales: [Sale]
+    }
+    
+    type TagsResult {
+        status: MutationStatus!
+        tags: [Tag]
     }
     
     type Mutation {
@@ -56,6 +105,14 @@ type_defs = """
             input: CreateSaleInput!
         ): SaleResult!
         
+        createWorker(
+            input: CreateWorkerInput!
+        ): WorkerResult!
+        
+        createGroup(
+            input: CreateGroupInput!
+        ): GroupResult!
+        
         updatePhoto(
             id: Int!
             input: UpdatePhotoInput!
@@ -80,6 +137,15 @@ type_defs = """
             id: Int!
             input: UpdateClientInput!
         ): ClientResult!
+        
+        updateWorker(
+            id: Int!
+            input: UpdateWorkerInput!
+        ): WorkerResult!
+        
+        updateGroup(
+            input: UpdateGroupInput!
+        ): GroupResult!
         
         updateOrder(
             id: Int!
@@ -116,6 +182,10 @@ type_defs = """
             id: Int!
         ): DeleteResult!
         
+        deleteGroup(
+            id: Int!
+        ): DeleteResult!
+        
         cancelPurchase(
             id: Int!
         ): PurchaseResult!
@@ -134,6 +204,16 @@ type_defs = """
             categoryId: Int!
         ): SaleCategoryResult!
         
+        addGroupToWorker(
+            groupId: Int!
+            workerId: Int!
+        ): WorkerGroupResult!
+        
+        addPermissionToGroup(
+            groupId: Int!
+            permissionId: Int!
+        ): GroupPermissionResult!
+        
         removeTagFromCategory(
             tagId: Int!
             categoryId: Int!
@@ -143,6 +223,16 @@ type_defs = """
             saleId: Int!
             categoryId: Int!
         ): SaleCategoryResult!
+        
+        removeGroupFromWorker(
+            groupId: Int!
+            workerId: Int!
+        ): WorkerGroupResult!
+        
+         removePermissionFromGroup(
+            groupId: Int!
+            permissionId: Int!
+        ): GroupPermissionResult!
         
         login(
             login: String!
@@ -186,6 +276,18 @@ type_defs = """
         lastName: String
         email: String!
         dateOfBirth: Date
+    }
+    
+    input CreateWorkerInput {
+        firstName: String
+        lastName: String
+        email: String!
+        salary: Float!
+        password: String!
+    }
+    
+    input CreateGroupInput {
+        name: String!
     }
     
     input CreateTagInput {
@@ -241,6 +343,17 @@ type_defs = """
         dateOfBirth: Date
     }
     
+    input UpdateWorkerInput {
+        firstName: String
+        lastName: String
+        email: String
+        salary: Float
+    }
+    
+    input UpdateGroupInput {
+        name: String
+    }
+    
     input UpdateTagInput {
         name: String
     }
@@ -275,11 +388,19 @@ type_defs = """
         room: Room
     }
     
-
-    
     type ClientResult {
         status: MutationStatus!
         client: Client
+    }
+    
+    type WorkerResult {
+        status: MutationStatus!
+        worker: Worker
+    }
+    
+    type GroupResult {
+        status: MutationStatus!
+        group: Group
     }
     
     type OrderResult {
@@ -290,6 +411,11 @@ type_defs = """
     type CategoryResult {
         status: MutationStatus!
         category: Category
+    }
+    
+    type UsersResult {
+        status: MutationStatus!
+        users: [User]
     }
     
     type PhotoResult {
@@ -321,6 +447,18 @@ type_defs = """
         status: MutationStatus!
         tag: Tag
         category: Category
+    }
+    
+    type WorkerGroupResult {
+        status: MutationStatus!
+        group: Group
+        worker: Worker
+    }
+    
+    type GroupPermissionResult {
+        status: MutationStatus!
+        group: Group
+        permission: Permission
     }
     
     type SaleCategoryResult {
@@ -370,7 +508,7 @@ type_defs = """
         beds: Int!
         square: Float!
         tags: [Tag]!
-        getRooms: RoomsResult
+        rooms: RoomsResult!
         familiar: [Category]!
         sales: [Sale]!
     }
@@ -397,8 +535,8 @@ type_defs = """
         dateFullPaid: Datetime
         dateFinished: Datetime
         dateCanceled: Datetime
-        client: Client!
-        purchases: [Purchase]!
+        client: ClientResult!
+        purchases: PurchasesResult!
     }
     
     type Purchase {
@@ -411,7 +549,7 @@ type_defs = """
         isPaid: Boolean!
         isPrepaymentPaid: Boolean!
         isCanceled: Boolean!
-        order: Order!
+        order: OrderResult!
         room: Room!
     }
     
@@ -424,6 +562,28 @@ type_defs = """
         startDate: Datetime!
         endDate: Datetime!
         categories: [Category]!
+    }
+    
+    type Permission {
+        id: Int!
+        name: String!
+        code: String!
+    }
+    
+    type Group {
+        id: Int!
+        name: String!
+        permissions: PermissionsResult!
+        users: UsersResult!
+    }
+    
+    type Worker {
+        id: Int!
+        firstName: String
+        lastName: String
+        email: String!
+        salary: Float!
+        groups: GroupsResult!
     }
     
     type AuthTokens {

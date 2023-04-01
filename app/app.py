@@ -1,15 +1,20 @@
 from os import environ
 from ariadne import gql, make_executable_schema, graphql_sync
-from ariadne.types import GraphQLResolveInfo
 from ariadne.explorer import ExplorerGraphiQL
 from flask import Flask, jsonify, request
 from modules.models.base import db
 from modules.graphql.schema import type_defs
-from modules.graphql.types import mutation, query, category, datetime_scalar, date_scalar
+from modules.graphql.types import (
+    mutation, query, datetime_scalar, date_scalar,
+    category, group, order, purchase, worker, user,
+)
 
 # TODO: банить jwt refresh токены после использования
 # TODO: корзина
-# TODO: права
+# TODO: инициализация прав
+# TODO: управление своими заказами
+# TODO: отправка письма при регистрации
+# TODO: сброс пароля
 # TODO: поиск
 # TODO: индексы прокинуть
 # TODO: cron для очищения корзины и заказов
@@ -20,7 +25,7 @@ from modules.graphql.types import mutation, query, category, datetime_scalar, da
 checked_types = gql(type_defs)
 schema = make_executable_schema(
     checked_types,
-    [query, mutation, category, date_scalar, datetime_scalar],
+    [query, mutation, category, date_scalar, datetime_scalar, group, order, purchase, worker, user, ],
     convert_names_case=True
 )
 explorer_html = ExplorerGraphiQL().html(None)

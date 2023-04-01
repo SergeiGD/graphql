@@ -1,9 +1,10 @@
-from typing import Any
+from typing import Any, List
 from functools import wraps
 from flask import current_app
 import jwt
 from jwt.exceptions import DecodeError, ExpiredSignatureError
 from ..models.users import User
+from ..managers.users_manager import UsersManager
 
 
 def return_validation_error(validation_error: Exception):
@@ -87,3 +88,27 @@ def token_required(f):
         return f(*args, **kwargs)
 
     return decorated_token
+
+
+def permission_required(permissions: List[str]):
+    def inner(f):
+        @wraps(f)
+        def decorated_permission(*args, **kwargs):
+
+            user = kwargs.get('current_user', None)
+            if user is None:
+                return {'status': {
+                    'success': False,
+                    'error': f'Для доступа к этой секции необходимо быть авторизированным пользователем',
+                }}
+
+            if UsersManager.can_actions(user, permissions):
+                return f(*args, **kwargs)
+
+            return {'status': {
+                'success': False,
+                'error': f'У Вас нету разрешений для доступа к этой секции',
+            }}
+
+        return decorated_permission
+    return inner

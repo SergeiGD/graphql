@@ -32,7 +32,10 @@ from .resolvers.groups_resolvers import (
     resolve_create_group, resolve_update_group, resolve_delete_group, resolve_groups, resolve_group_permissions,
     resolve_add_permission_to_group, resolve_remove_permission_from_group, resolve_group_users
 )
-from .resolvers.auth_resolvers import resolve_login, resolve_sing_up, resolve_refresh
+from .resolvers.auth_resolvers import (
+    resolve_login, resolve_sing_up, resolve_refresh, resolve_account_confirm,
+    resolve_reset_confirm, resolve_request_reset
+)
 from .resolvers.carts_resolvers import resolve_create_cart, resolve_cart, resolve_confirm_cart
 from .resolvers.client_orders_resolvers import (
     resolve_cancel_client_order, resolve_client_orders, resolve_client_pay_order
@@ -102,6 +105,9 @@ mutation.set_field('addPermissionToGroup', resolve_add_permission_to_group)
 mutation.set_field('removePermissionFromGroup', resolve_remove_permission_from_group)
 mutation.set_field('login', resolve_login)
 mutation.set_field('singUp', resolve_sing_up)
+mutation.set_field('confirmAccount', resolve_account_confirm)
+mutation.set_field('requestReset', resolve_request_reset)
+mutation.set_field('confirmReset', resolve_reset_confirm)
 mutation.set_field('refreshToken', resolve_refresh)
 
 category = ObjectType('Category')
@@ -130,6 +136,6 @@ date_scalar.set_serializer(serialize_date)
 date_scalar.set_value_parser(parse_date_value)
 
 
-user = UnionType('User', resolve_user_type)
-base_order = UnionType('BaseOrder', resolve_order_type)
+user_union = UnionType('UserUnion', resolve_user_type)
+base_order_union = UnionType('BaseOrderUnion', resolve_order_type)
 

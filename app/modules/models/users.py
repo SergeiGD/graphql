@@ -3,7 +3,7 @@ from _decimal import Decimal
 from typing import List
 from ..settings import settings
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
-from sqlalchemy import ForeignKey, Table, Column
+from sqlalchemy import ForeignKey, Table, Column, event
 from typing import Optional
 from .base import db
 import modules.models.orders as orders
@@ -29,6 +29,8 @@ class User(db.Model):
     password: Mapped[Optional[str]]
     date_created: Mapped[datetime] = mapped_column(default=datetime.now(tz=settings.TIMEZONE))
     date_deleted: Mapped[Optional[datetime]]
+    is_confirmed: Mapped[bool] = mapped_column(default=False)
+
     type: Mapped[str]
 
     orders: Mapped[List['orders.Order']] = relationship(back_populates='client', viewonly=True)
@@ -47,12 +49,7 @@ class User(db.Model):
     def validate_email(self, key, email):
         if '@' not in email:
             raise ValueError('Неверный формат адреса эл. почты')
-        if db.session.query(
-                db.session.query(User).filter(
-                    User.email == email
-                ).exists()
-        ).scalar():
-            raise ValueError('Уже есть пользователь с таким адреос эл. почты')
+
         return email
 
 
@@ -80,3 +77,15 @@ class Worker(User):
         'polymorphic_identity': 'worker',
     }
 
+
+def validate_unq_email(mapper, connection, target: User):
+    if db.session.query(
+            db.session.query(User).filter(
+                User.email == target.email
+            ).exists()
+    ).scalar():
+        raise ValueError('Уже есть пользователь с таким адреос эл. почты')
+
+
+event.listen(Client, 'before_insert', validate_unq_email)
+event.listen(Worker, 'before_insert', validate_unq_email)

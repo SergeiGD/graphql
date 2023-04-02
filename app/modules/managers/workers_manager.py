@@ -9,9 +9,6 @@ class WorkersManager:
     @staticmethod
     def save_worker(worker: Worker):
         db.session.add(worker)
-        if inspect(worker).attrs.password.history.added:
-            hashed_password = bcrypt.hashpw(worker.password.encode('utf-8'), bcrypt.gensalt())
-            worker.password = hashed_password.decode('utf8')
         db.session.commit()
 
     @staticmethod

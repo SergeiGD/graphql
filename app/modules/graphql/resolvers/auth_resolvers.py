@@ -3,16 +3,16 @@ from datetime import datetime, timedelta
 from ...settings import settings
 import jwt
 from jwt.exceptions import DecodeError, ExpiredSignatureError
-from ariadne.types import GraphQLResolveInfo
-from ..utils import return_validation_error
-from ...models.users import Client
+from ..utils import return_validation_error, return_not_found_error
+from ...models.users import Client, User
+from ...models.base import db
+from ...models.tokens import Token, TokenType
 from ...managers.users_manager import UsersManager
-from ...managers.clients_manager import ClientsManager
 
 
 def resolve_login(*_, login: str, password: str):
     try:
-        user = UsersManager.check_password(login, password)
+        user = UsersManager.authenticate_user(login, password)
     except ValueError as validation_error:
         return return_validation_error(validation_error)
 
@@ -41,10 +41,53 @@ def resolve_login(*_, login: str, password: str):
 
 def resolve_sing_up(*_, input: dict):
     try:
-        client = ClientsManager.register_client(Client(**input))
+        user, token = UsersManager.register_user(Client(**input))
     except ValueError as validation_error:
         return return_validation_error(validation_error)
-    return {'client': client, 'status': {
+    return {'user': user, 'token': token,  'status': {
+        'success': True,
+    }}
+
+
+def resolve_account_confirm(*_, token: str):
+    register_token = UsersManager.check_token(token, TokenType.register)
+    if register_token is None:
+        return {'status': {
+            'success': False,
+            'error': 'Не найден активный токен с таким значением'
+        }}
+    UsersManager.confirm_account(register_token)
+    return {'user': register_token.user, 'status': {
+        'success': True,
+    }}
+
+
+def resolve_request_reset(*_, email: str):
+    user = db.session.query(User).filter(
+        User.email == email,
+        User.is_confirmed == True,
+    ).first()
+    # проверяем есть ли такой пользователь
+    if user is None:
+        return {'status': {
+            'success': False,
+            'error': 'Не активный пользователь с такой эл. почтой'
+        }}
+    user, token = UsersManager.request_reset(user)
+    return {'user': user, 'token': token, 'status': {
+        'success': True,
+    }}
+
+
+def resolve_reset_confirm(*_, token: str, password: str):
+    reset_token = UsersManager.check_token(token, TokenType.reset)
+    if reset_token is None:
+        return {'status': {
+            'success': False,
+            'error': 'Не найден активный токен с таким значением'
+        }}
+    UsersManager.confirm_reset(reset_token, password)
+    return {'user': reset_token.user, 'status': {
         'success': True,
     }}
 

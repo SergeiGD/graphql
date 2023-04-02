@@ -1,8 +1,8 @@
 type_defs = """
     scalar Datetime
     scalar Date
-    union User = Client | Worker
-    union BaseOrder = Order | Cart
+    union UserUnion = Client | Worker
+    union BaseOrderUnion = Order | Cart
 
     type Query {
         getTags(tagId: Int): TagsResult!
@@ -272,7 +272,20 @@ type_defs = """
         
         singUp(
             input: SingUpInput!
-        ): ClientResult!
+        ): AccountActionResult!
+        
+        confirmAccount(
+            token: String!
+        ): UserResult!
+        
+        requestReset(
+            email: String!
+        ): AccountActionResult!
+        
+        confirmReset(
+            token: String!
+            password: String!
+        ): UserResult!
         
         refreshToken(
             refreshToken: String!
@@ -328,7 +341,6 @@ type_defs = """
         lastName: String
         email: String!
         salary: Float!
-        password: String!
     }
     
     input CreateGroupInput {
@@ -471,12 +483,12 @@ type_defs = """
     
     type UsersResult {
         status: MutationStatus!
-        users: [User]
+        users: [UserUnion]
     }
     
     type BaseOrderResult {
         status: MutationStatus!
-        order: BaseOrder
+        order: BaseOrderUnion
     }
     
     type PhotoResult {
@@ -499,9 +511,20 @@ type_defs = """
         tokens: AuthTokens
     }
     
+    type AccountActionResult {
+        status: MutationStatus!
+        token: String
+        user: User
+    }
+    
     type SaleResult {
         status: MutationStatus!
         sale: Sale
+    }
+    
+    type UserResult {
+        status: MutationStatus!
+        user: User
     }
     
     type TagCategoryResult {
@@ -580,6 +603,15 @@ type_defs = """
         lastName: String
         email: String!
         dateOfBirth: Date
+    }
+    
+    type User {
+        id: Int!
+        firstName: String
+        lastName: String
+        email: String!
+        date_created: String!
+        is_confirmed: String!
     }
     
     type Order {

@@ -5,7 +5,7 @@ from flask import Flask, jsonify, request
 from modules.models.base import db
 from modules.graphql.schema import type_defs
 from modules.graphql.types import (
-    mutation, query, datetime_scalar, date_scalar, user, base_order,
+    mutation, query, datetime_scalar, date_scalar, user_union, base_order_union,
     category, group, order, purchase, worker,
 )
 
@@ -25,7 +25,10 @@ from modules.graphql.types import (
 checked_types = gql(type_defs)
 schema = make_executable_schema(
     checked_types,
-    [query, mutation, category, date_scalar, datetime_scalar, group, order, purchase, worker, user, base_order, ],
+    [
+        query, mutation, category, date_scalar, datetime_scalar,
+        group, order, purchase, worker, user_union, base_order_union,
+     ],
     convert_names_case=True
 )
 explorer_html = ExplorerGraphiQL().html(None)
@@ -61,6 +64,7 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True, host='0.0.0.0')
+
 
 
 

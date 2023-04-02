@@ -10,12 +10,6 @@ from modules.graphql.types import (
 )
 
 # TODO: банить jwt refresh токены после использования
-# TODO: корзина
-# TODO: инициализация прав
-# TODO: управление своими заказами
-# TODO: отправка письма при регистрации
-# TODO: сброс пароля
-# TODO: поиск
 # TODO: индексы прокинуть
 # TODO: cron для очищения корзины и заказов
 # TODO: dataclasses
@@ -64,7 +58,4 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True, host='0.0.0.0')
-
-
-
 

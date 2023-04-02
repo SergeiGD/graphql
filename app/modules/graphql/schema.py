@@ -2,6 +2,7 @@ type_defs = """
     scalar Datetime
     scalar Date
     union User = Client | Worker
+    union BaseOrder = Order | Cart
 
     type Query {
         getTags(tagId: Int): TagsResult!
@@ -15,6 +16,8 @@ type_defs = """
         getWorkers(workerId: Int): WorkersResult!
         getGroups(groupId: Int): GroupsResult!
         getPermissions(permissionId: Int): PermissionsResult!
+        getCart(cartUuid: String!): CartResult!
+        getClientOrders(orderId: Int): ClientOrdersResult!
     }
     
     type RoomsResult {
@@ -62,6 +65,11 @@ type_defs = """
         photos: [Photo]
     }
     
+    type ClientOrdersResult {
+        status: MutationStatus!
+        orders: [ClientOrder]
+    }
+    
     type SalesResult {
         status: MutationStatus!
         sales: [Sale]
@@ -70,6 +78,11 @@ type_defs = """
     type TagsResult {
         status: MutationStatus!
         tags: [Tag]
+    }
+    
+    type CartResult {
+        status: MutationStatus!
+        cart: Cart
     }
     
     type Mutation {
@@ -97,8 +110,15 @@ type_defs = """
             input: CreateOrderInput!
         ): OrderResult!
         
+        createCart: Cart!
+        
         createPurchase(
             input: CreatePurchaseInput!
+        ): PurchaseResult!
+        
+        createCartPurchase(
+            cartUuid: String!
+            input: CreateCartPurchaseInput!
         ): PurchaseResult!
         
         createSale(
@@ -157,6 +177,12 @@ type_defs = """
             input: UpdatePurchaseInput!
         ): PurchaseResult!
         
+        updateCartPurchase(
+            cartUuid: String!
+            id: Int!
+            input: UpdatePurchaseInput!
+        ): PurchaseResult!
+        
         updateSale(
             id: Int!
             input: UpdateSaleInput!
@@ -187,6 +213,11 @@ type_defs = """
         ): DeleteResult!
         
         cancelPurchase(
+            id: Int!
+        ): PurchaseResult!
+        
+        cancelCartPurchase(
+            cartUuid: String!
             id: Int!
         ): PurchaseResult!
         
@@ -246,6 +277,20 @@ type_defs = """
         refreshToken(
             refreshToken: String!
         ): LoginResult!
+        
+        confirmCart(
+            cartUuid: String!
+            email: String!
+            isFullyPaid: Boolean!
+        ): ClientOrderResult!
+        
+        payClientOrder(
+            id: Int!
+        ): ClientOrderResult!
+        
+        cancelClientOrder(
+            id: Int!
+        ): ClientOrderResult!
     }
     
     input CreateRoomInput {
@@ -303,6 +348,12 @@ type_defs = """
         end: Date!
         categoryId: Int!
         orderId: Int!
+    }
+    
+    input CreateCartPurchaseInput {
+        start: Date!
+        end: Date!
+        categoryId: Int!
     }
     
     input CreateSaleInput {
@@ -408,6 +459,11 @@ type_defs = """
         order: Order
     }
     
+    type ClientOrderResult {
+        status: MutationStatus!
+        order: ClientOrder
+    }
+    
     type CategoryResult {
         status: MutationStatus!
         category: Category
@@ -416,6 +472,11 @@ type_defs = """
     type UsersResult {
         status: MutationStatus!
         users: [User]
+    }
+    
+    type BaseOrderResult {
+        status: MutationStatus!
+        order: BaseOrder
     }
     
     type PhotoResult {
@@ -539,6 +600,32 @@ type_defs = """
         purchases: PurchasesResult!
     }
     
+    type ClientOrder {
+        id: Int!
+        price: Float!
+        prepayment: Float!
+        comment: String
+        paid: Float!
+        refunded: Float!
+        leftToPay: Float!
+        leftToRefund: Float!
+        dateCreated: Datetime!
+        dateFullPrepayment: Datetime
+        dateFullPaid: Datetime
+        dateFinished: Datetime
+        dateCanceled: Datetime
+        purchases: [Purchase]!
+    }
+    
+    type Cart {
+        id: Int!
+        cartUuid: String!
+        dateCreated: Datetime!
+        price: Float!
+        prepayment: Float!
+        purchases: [Purchase]!
+    }
+    
     type Purchase {
         id: Int!
         start: Date!
@@ -549,7 +636,7 @@ type_defs = """
         isPaid: Boolean!
         isPrepaymentPaid: Boolean!
         isCanceled: Boolean!
-        order: OrderResult!
+        order: BaseOrderResult!
         room: Room!
     }
     

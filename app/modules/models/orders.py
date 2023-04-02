@@ -1,12 +1,13 @@
 from typing import Optional, List
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates, column_property
-from sqlalchemy import ForeignKey, func, select, event, case, and_
+from sqlalchemy import ForeignKey, func, select, event, case, and_, text
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.types import DECIMAL
+from sqlalchemy.types import DECIMAL, UUID
 from _decimal import Decimal
 from datetime import datetime, date
 from ..settings import settings
 from .base import db
+import uuid
 import modules.models.users as users
 import modules.models.rooms as rooms
 
@@ -34,11 +35,15 @@ class Purchase(db.Model):
     @validates('order_id')
     def validate_order_id(self, key, order_id):
         if not db.session.query(
-                Order.query.filter(
-                    Order.id == order_id,
-                    Order.date_canceled == None,
-                    Order.date_finished == None,
-                ).exists()
+                and_(
+                    BaseOrder.query.filter(
+                        BaseOrder.id == order_id
+                    ).exists(),
+                    Order.query.filter(
+                        Order.date_canceled == None,
+                        Order.date_finished == None,
+                    ).exists(),
+                )
         ).scalar():
             raise ValueError('Не найден активный заказ с таким id')
 
@@ -93,7 +98,7 @@ class BaseOrder(db.Model):
         )
     )
 
-    purchases: Mapped[List['Purchase']] = relationship(back_populates='order', viewonly=True)
+    purchases: Mapped[List['Purchase']] = relationship(back_populates='order')
 
     __mapper_args__ = {
         'polymorphic_abstract': True,
@@ -171,7 +176,8 @@ class Cart(BaseOrder):
     REPR_MODEL_NAME = 'корзина'
 
     id: Mapped[int] = mapped_column(ForeignKey("base_order.id"), primary_key=True)
-    cart_uuid: Mapped[str] = mapped_column(unique=True)  # uuid для получения корзины
+    # cart_uuid: Mapped[str] = mapped_column(unique=True)  # uuid для получения корзины
+    cart_uuid: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), default=uuid.uuid4, unique=True)  # uuid для получения корзины
 
     __mapper_args__ = {
         'polymorphic_identity': 'cart',

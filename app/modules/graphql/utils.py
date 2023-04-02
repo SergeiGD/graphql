@@ -93,7 +93,7 @@ def token_required(f):
 def permission_required(permissions: List[str]):
     def inner(f):
         @wraps(f)
-        def decorated_permission(*args, **kwargs):
+        def check_permissions(*args, **kwargs):
 
             user = kwargs.get('current_user', None)
             if user is None:
@@ -110,5 +110,5 @@ def permission_required(permissions: List[str]):
                 'error': f'У Вас нету разрешений для доступа к этой секции',
             }}
 
-        return decorated_permission
+        return check_permissions
     return inner

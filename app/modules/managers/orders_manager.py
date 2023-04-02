@@ -99,3 +99,8 @@ class OrdersManager:
         ).delete()
         db.session.commit()
 
+    @staticmethod
+    def mark_as_paid(order: Order):
+        order.paid = order.price
+        OrdersManager.save_order(order)
+

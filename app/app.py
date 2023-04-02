@@ -5,8 +5,8 @@ from flask import Flask, jsonify, request
 from modules.models.base import db
 from modules.graphql.schema import type_defs
 from modules.graphql.types import (
-    mutation, query, datetime_scalar, date_scalar,
-    category, group, order, purchase, worker, user,
+    mutation, query, datetime_scalar, date_scalar, user, base_order,
+    category, group, order, purchase, worker,
 )
 
 # TODO: банить jwt refresh токены после использования
@@ -25,7 +25,7 @@ from modules.graphql.types import (
 checked_types = gql(type_defs)
 schema = make_executable_schema(
     checked_types,
-    [query, mutation, category, date_scalar, datetime_scalar, group, order, purchase, worker, user, ],
+    [query, mutation, category, date_scalar, datetime_scalar, group, order, purchase, worker, user, base_order, ],
     convert_names_case=True
 )
 explorer_html = ExplorerGraphiQL().html(None)

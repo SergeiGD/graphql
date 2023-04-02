@@ -9,6 +9,7 @@ from ..models.rooms import Room
 from ..models.base import db
 from .categories_manager import CategoriesManager
 from .orders_manager import OrdersManager
+from ..models.orders import Order
 
 
 class PurchasesManager:
@@ -80,7 +81,8 @@ class PurchasesManager:
         PurchasesManager.set_room(purchase, category)
         PurchasesManager.set_price(purchase)
         db.session.commit()
-        OrdersManager.save_order(purchase.order)
+        if isinstance(purchase.order, Order):
+            OrdersManager.save_order(purchase.order)
 
     @staticmethod
     def mark_as_canceled(purchase: Purchase):

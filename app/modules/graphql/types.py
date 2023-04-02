@@ -1,6 +1,8 @@
 from ariadne import QueryType, ObjectType, MutationType, ScalarType, UnionType
 from .scalars.date_scalar import serialize_date, parse_date_value
 from .scalars.datetime_scalar import serialize_datetime, parse_datetime_value
+from .unions.users_union import resolve_user_type
+from .unions.orders_union import resolve_order_type
 from .resolvers.tags_resolvers import resolve_create_tag, resolve_update_tag, resolve_delete_tag, resolve_tags
 from .resolvers.photos_resolvers import resolve_create_photo, resolve_update_photo, resolve_delete_photo, resolve_photos
 from .resolvers.rooms_resolvers import resolve_create_room, resolve_update_room, resolve_delete_room, resolve_rooms
@@ -8,11 +10,12 @@ from .resolvers.sales_resolvers import resolve_create_sale, resolve_update_sale,
 from .resolvers.clients_resolvers import resolve_create_client, resolve_update_client, resolve_clients
 from .resolvers.orders_resolvers import (
     resolve_create_order, resolve_update_order, resolve_cancel_order, resolve_orders,
-    resolve_order_purchases, resolve_order_client
+    resolve_order_client, resolve_order_purchases
 )
 from .resolvers.purchases_resolvers import (
     resolve_create_purchase, resolve_update_purchase, resolve_cancel_purchase,
-    resolve_purchases, resolve_purchase_order
+    resolve_purchases, resolve_purchase_order,
+    resolve_create_cart_purchase, resolve_update_cart_purchase, resolve_cancel_cart_purchase
 )
 from .resolvers.permissions_resolvers import resolve_permissions
 from .resolvers.categories_resolvers import (
@@ -30,7 +33,10 @@ from .resolvers.groups_resolvers import (
     resolve_add_permission_to_group, resolve_remove_permission_from_group, resolve_group_users
 )
 from .resolvers.auth_resolvers import resolve_login, resolve_sing_up, resolve_refresh
-from .resolvers.users_resolvers import resolve_user_type
+from .resolvers.carts_resolvers import resolve_create_cart, resolve_cart, resolve_confirm_cart
+from .resolvers.client_orders_resolvers import (
+    resolve_cancel_client_order, resolve_client_orders, resolve_client_pay_order
+)
 
 query = QueryType()
 query.set_field('getTags', resolve_tags)
@@ -44,6 +50,8 @@ query.set_field('getPurchases', resolve_purchases)
 query.set_field('getWorkers', resolve_workers)
 query.set_field('getGroups', resolve_groups)
 query.set_field('getPermissions', resolve_permissions)
+query.set_field('getCart', resolve_cart)
+query.set_field('getClientOrders', resolve_client_orders)
 
 mutation = MutationType()
 mutation.set_field('createTag', resolve_create_tag)
@@ -74,9 +82,16 @@ mutation.set_field('updateWorker', resolve_update_worker)
 mutation.set_field('createOrder', resolve_create_order)
 mutation.set_field('updateOrder', resolve_update_order)
 mutation.set_field('cancelOrder', resolve_cancel_order)
+mutation.set_field('createCart', resolve_create_cart)
 mutation.set_field('createPurchase', resolve_create_purchase)
 mutation.set_field('updatePurchase', resolve_update_purchase)
 mutation.set_field('cancelPurchase', resolve_cancel_purchase)
+mutation.set_field('createCartPurchase', resolve_create_cart_purchase)
+mutation.set_field('updateCartPurchase', resolve_update_cart_purchase)
+mutation.set_field('cancelCartPurchase', resolve_cancel_cart_purchase)
+mutation.set_field('confirmCart', resolve_confirm_cart)
+mutation.set_field('cancelClientOrder', resolve_cancel_client_order)
+mutation.set_field('payClientOrder', resolve_client_pay_order)
 mutation.set_field('addTagToCategory', resolve_add_tag_to_category)
 mutation.set_field('removeTagFromCategory', resolve_remove_tag_from_category)
 mutation.set_field('addSaleToCategory', resolve_add_sale_to_category)
@@ -116,4 +131,5 @@ date_scalar.set_value_parser(parse_date_value)
 
 
 user = UnionType('User', resolve_user_type)
+base_order = UnionType('BaseOrder', resolve_order_type)
 

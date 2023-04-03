@@ -19,7 +19,8 @@ class Token(db.Model):
     REPR_MODEL_NAME = 'токен'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    token: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), default=uuid.uuid4, unique=True)
+    # token: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), default=uuid.uuid4, unique=True)
+    token: Mapped[str]
     is_used: Mapped[bool] = mapped_column(default=False)
     token_type: Mapped[TokenType] = mapped_column(Enum(TokenType))
     expires: Mapped[datetime] = mapped_column(

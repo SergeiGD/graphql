@@ -1,12 +1,7 @@
-from flask import current_app
-from datetime import datetime, timedelta
-from ...settings import settings
-import jwt
-from jwt.exceptions import DecodeError, ExpiredSignatureError
-from ..utils import return_validation_error, return_not_found_error
+from ..utils import return_validation_error
 from ...models.users import Client, User
 from ...models.base import db
-from ...models.tokens import Token, TokenType
+from ...models.tokens import TokenType
 from ...managers.users_manager import UsersManager
 
 
@@ -16,17 +11,7 @@ def resolve_login(*_, login: str, password: str):
     except ValueError as validation_error:
         return return_validation_error(validation_error)
 
-    access_token = jwt.encode({
-        'id': user.id,
-        'exp': datetime.now(tz=settings.TIMEZONE) + timedelta(minutes=30),
-        'is_refresh_token': False,
-    }, current_app.config['SECRET_KEY'], algorithm='HS256')
-
-    refresh_token = jwt.encode({
-        'id': user.id,
-        'exp': datetime.now(tz=settings.TIMEZONE) + timedelta(days=7),
-        'is_refresh_token': True,
-    }, current_app.config['SECRET_KEY'], algorithm='HS256')
+    access_token, refresh_token = UsersManager.generate_auth_tokens(user.id)
 
     return {
         'tokens': {
@@ -44,7 +29,7 @@ def resolve_sing_up(*_, input: dict):
         user, token = UsersManager.register_user(Client(**input))
     except ValueError as validation_error:
         return return_validation_error(validation_error)
-    return {'user': user, 'token': token,  'status': {
+    return {'user': user, 'token': token, 'status': {
         'success': True,
     }}
 
@@ -93,37 +78,13 @@ def resolve_reset_confirm(*_, token: str, password: str):
 
 
 def resolve_refresh(*_, refresh_token: str):
-    if refresh_token is None:
-        return {'status': {
-            'success': False,
-            'error': f'Токен обновления не был предоставлен',
-        }}
     try:
-        payload = jwt.decode(refresh_token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
-    except (DecodeError, ExpiredSignatureError):
+        access_token, refresh_token = UsersManager.refresh_auth_tokens(refresh_token)
+    except ValueError as token_error:
         return {'status': {
             'success': False,
-            'error': f'Недействительный токен обновления',
+            'error': str(token_error),
         }}
-
-    # TODO вот тут же проверку, не забанен ли токен
-    if not payload['is_refresh_token']:
-        return {'status': {
-            'success': False,
-            'error': f'Недействительный токен обновления',
-        }}
-
-    access_token = jwt.encode({
-        'id': payload['id'],
-        'exp': datetime.now(tz=settings.TIMEZONE) + timedelta(minutes=30),
-        'is_refresh_token': False,
-    }, current_app.config['SECRET_KEY'], algorithm='HS256')
-
-    refresh_token = jwt.encode({
-        'id': payload['id'],
-        'exp': datetime.now(tz=settings.TIMEZONE) + timedelta(days=7),
-        'is_refresh_token': True,
-    }, current_app.config['SECRET_KEY'], algorithm='HS256')
 
     return {
         'tokens': {
@@ -134,8 +95,3 @@ def resolve_refresh(*_, refresh_token: str):
             'success': True,
         }
     }
-
-
-
-
-

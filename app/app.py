@@ -8,9 +8,11 @@ from modules.graphql.types import (
     mutation, query, datetime_scalar, date_scalar, user_union, base_order_union,
     category, group, order, purchase, worker,
 )
+from modules.settings import settings
 
-# TODO: банить jwt refresh токены после использования
 # TODO: индексы прокинуть
+# TODO: поиск
+# TODO: получение свободных дат номеров
 # TODO: cron для очищения корзины и заказов
 # TODO: dataclasses
 # TODO: типизацию
@@ -27,7 +29,7 @@ schema = make_executable_schema(
 )
 explorer_html = ExplorerGraphiQL().html(None)
 app = Flask(__name__)
-app.config['SECRET_KEY'] = environ.get('SECRET_KEY', 'my_very_secret_key')
+app.config['SECRET_KEY'] = settings.SECRET_KEY
 
 
 @app.route("/graphql", methods=["GET"])

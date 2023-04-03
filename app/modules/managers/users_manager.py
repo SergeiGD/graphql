@@ -29,6 +29,9 @@ def gen_confirm_token():
 
 
 class UsersManager:
+    """
+    Класс для работы с пользователями (аутентификация, сброс пароля, регистрация и т.п.)
+    """
     @staticmethod
     def authenticate_user(login: str, password: str):
         """

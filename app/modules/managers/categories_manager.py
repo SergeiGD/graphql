@@ -57,6 +57,60 @@ class CategoriesManager:
         return picked_room_id
 
     @staticmethod
+    def get_busy_dates(category: Category, date_start: date, date_end: date):
+        """
+        Получение занятых дней комнат категории
+        :param category: категория, комнаты которой нужно проверить
+        :param date_start: дата начала проверки
+        :param date_end: дата конца проверки
+        :return:
+        """
+        if date_end < date.today():
+            # если запрашиваем прошедшие даты, то проверять смысла нету и возвращаем, что все занято
+            return sorted([
+                date_start + timedelta(days=x) for x in range((date_end - date_start).days + 1)
+            ])
+
+        current_day = date_start
+        busy_dates = []
+        while current_day <= date_end:
+            # проверяем занят ли день и не прошедшая ли дата
+            if current_day < date.today() or CategoriesManager.is_day_busy(category, current_day):
+                busy_dates.append(current_day)
+            current_day += timedelta(days=1)
+        # сортируем даты
+        busy_dates.sort()
+        return busy_dates
+
+    @staticmethod
+    def is_day_busy(category: Category, day: date):
+        """
+        Проверка, забронированны ли все комнаты выбранной категории на этот день
+        :param category: категория, комнаты которой нужно проверить
+        :param day: дата, на которую будет осуществлена проверка
+        :return:
+        """
+        # получаем брони, которые есть на этот день
+        purchases = db.session.query(Purchase.room_id).filter(
+            Purchase.start <= day,
+            Purchase.end > day,
+            Purchase.is_canceled == False
+        ).subquery('purchases')
+
+        # если есть хоть одна комната, на которую нету брони в этот день, то есть свободная
+        if db.session.query(
+                db.session.query(Room).filter(
+                    Room.category_id == category.id,
+                    Room.date_deleted == None,
+                    Room.id.not_in(
+                        purchases
+                    )
+                ).exists()
+        ).scalar():
+            return False
+        return True
+
+    @staticmethod
     def get_familiar(category: Category):
         """
         Получение похожих категория (с похожими тегами)

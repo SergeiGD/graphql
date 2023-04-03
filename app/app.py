@@ -12,7 +12,6 @@ from modules.settings import settings
 
 # TODO: индексы прокинуть
 # TODO: поиск
-# TODO: получение свободных дат номеров
 # TODO: cron для очищения корзины и заказов
 # TODO: dataclasses
 # TODO: типизацию
@@ -60,4 +59,5 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True, host='0.0.0.0')
+
 

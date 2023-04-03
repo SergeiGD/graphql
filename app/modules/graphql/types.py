@@ -22,7 +22,7 @@ from .resolvers.categories_resolvers import (
     resolve_create_category, resolve_update_category, resolve_delete_category, resolve_categories,
     resolve_add_tag_to_category, resolve_remove_tag_from_category,
     resolve_add_sale_to_category, resolve_remove_sale_from_category,
-    resolve_category_familiar
+    resolve_category_familiar, resolve_category_busy_dates
 )
 from .resolvers.workers_resolvers import (
     resolve_create_worker, resolve_update_worker, resolve_workers,
@@ -112,6 +112,7 @@ mutation.set_field('refreshToken', resolve_refresh)
 
 category = ObjectType('Category')
 category.set_field('familiar', resolve_category_familiar)
+category.set_field('bookedDates', resolve_category_busy_dates)
 
 group = ObjectType('Group')
 group.set_field('permissions', resolve_group_permissions)

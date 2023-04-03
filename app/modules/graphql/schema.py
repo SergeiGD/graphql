@@ -595,6 +595,12 @@ type_defs = """
         rooms: RoomsResult!
         familiar: [Category]!
         sales: [Sale]!
+        bookedDates(dateStart: Date!, dateEnd: Date!): [Date]!
+    }
+    
+    input DatesInput {
+        dateStart: Date,
+        dateEnd: Date
     }
     
     type Client {

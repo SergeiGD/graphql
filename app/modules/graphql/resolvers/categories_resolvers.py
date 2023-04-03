@@ -1,4 +1,5 @@
 from typing import Optional
+from datetime import date
 from ...models.categories import Category
 from ...models.tags import Tag
 from ...models.sales import Sale
@@ -67,6 +68,10 @@ def resolve_categories(*_, cat_id: Optional[int] = None):
 
 def resolve_category_familiar(obj: Category, *_):
     return CategoriesManager.get_familiar(obj)
+
+
+def resolve_category_busy_dates(obj: Category, _, date_start: date, date_end: date):
+    return CategoriesManager.get_busy_dates(obj, date_start, date_end)
 
 
 @token_required

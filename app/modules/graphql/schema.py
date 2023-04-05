@@ -1,6 +1,7 @@
 type_defs = """
     scalar Datetime
     scalar Date
+    scalar Upload
     union UserUnion = Client | Worker
     union BaseOrderUnion = Order | Cart
     
@@ -10,7 +11,7 @@ type_defs = """
         beds
         square
         floors
-        rooms_count
+        roomsCount
         price
     }
 
@@ -148,6 +149,7 @@ type_defs = """
         
         createCategory(
             input: CreateCategoryInput!
+            file: Upload!
         ): CategoryResult
         
         createRoom(
@@ -156,6 +158,7 @@ type_defs = """
         
         createPhoto(
             input: CreatePhotoInput!
+            file: Upload!
         ): PhotoResult!
         
         createClient(
@@ -179,6 +182,7 @@ type_defs = """
         
         createSale(
             input: CreateSaleInput!
+            file: Upload!
         ): SaleResult!
         
         createWorker(
@@ -192,10 +196,12 @@ type_defs = """
         updatePhoto(
             id: Int!
             input: UpdatePhotoInput!
+            file: Upload
         ): PhotoResult!
         
         updateCategory(
             id: Int!
+            file: Upload
             input: UpdateCategoryInput!
         ): CategoryResult!
         
@@ -242,6 +248,7 @@ type_defs = """
         updateSale(
             id: Int!
             input: UpdateSaleInput!
+            file: Upload
         ): SaleResult!
         
         deleteRoom(
@@ -373,7 +380,6 @@ type_defs = """
         price: Float!
         prepaymentPercent: Float!
         refundPercent: Float!
-        mainPhotoPath: String!
         roomsCount: Int!
         floors: Int!
         beds: Int!
@@ -381,7 +387,6 @@ type_defs = """
     }
     
     input CreatePhotoInput {
-        path: String!
         categoryId: Int!
     }
     
@@ -428,13 +433,11 @@ type_defs = """
         name: String!
         description: String!
         discount: Float!
-        image_path: String!
         startDate: Datetime!
         endDate: Datetime!
     }
     
     input UpdatePhotoInput {
-        path: String
         order: Int
     }
     
@@ -448,7 +451,6 @@ type_defs = """
         price: Float
         prepaymentPercent: Float
         refundPercent: Float
-        mainPhotoPath: String
         roomsCount: Int
         floors: Int
         beds: Int
@@ -481,7 +483,6 @@ type_defs = """
         name: String
         description: String
         discount: Float
-        image_path: String
         startDate: Datetime
         endDate: Datetime
     }
@@ -672,8 +673,8 @@ type_defs = """
         firstName: String
         lastName: String
         email: String!
-        date_created: String!
-        is_confirmed: String!
+        dateCreated: String!
+        isConfirmed: String!
     }
     
     type Order {
@@ -739,7 +740,7 @@ type_defs = """
         name: String!
         description: String!
         discount: Float!
-        image_path: String!
+        imagePath: String!
         startDate: Datetime!
         endDate: Datetime!
         categories: [Category]!
@@ -768,7 +769,7 @@ type_defs = """
     }
     
     type AuthTokens {
-        access_token: String!
-        refresh_token: String!
+        accessToken: String!
+        refreshToken: String!
     }
 """

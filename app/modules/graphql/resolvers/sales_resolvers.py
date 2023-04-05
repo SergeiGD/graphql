@@ -3,14 +3,15 @@ from ...models.sales import Sale
 from ...models.base import db
 from ...managers.sales_manager import SalesManager
 from ..utils import return_validation_error, return_not_found_error, update_fields, token_required, permission_required
+from werkzeug.datastructures import FileStorage
 
 
 @token_required
 @permission_required(permissions=['add_sale'])
-def resolve_create_sale(*_, input: dict, current_user):
+def resolve_create_sale(*_, input: dict, file: FileStorage, current_user):
     try:
         sale = Sale(**input)
-        SalesManager.save_sale(sale)
+        SalesManager.save_sale(sale, file)
     except ValueError as validation_error:
         return return_validation_error(validation_error)
     return {'sale': sale, 'status': {
@@ -20,7 +21,7 @@ def resolve_create_sale(*_, input: dict, current_user):
 
 @token_required
 @permission_required(permissions=['edit_sale'])
-def resolve_update_sale(*_, id: int, input: dict, current_user):
+def resolve_update_sale(*_, id: int, input: dict, file: Optional[FileStorage] = None, current_user):
     sale: Sale = db.session.query(Sale).filter(
         Sale.id == id
     ).first()
@@ -28,7 +29,7 @@ def resolve_update_sale(*_, id: int, input: dict, current_user):
         return return_not_found_error(Sale.REPR_MODEL_NAME)
     try:
         update_fields(sale, input)
-        SalesManager.save_sale(sale)
+        SalesManager.save_sale(sale, file)
     except ValueError as validation_error:
         return return_validation_error(validation_error)
     return {'sale': sale, 'status': {

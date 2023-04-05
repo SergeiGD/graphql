@@ -1,5 +1,7 @@
+import json
 from os import environ
-from ariadne import gql, make_executable_schema, graphql_sync
+from ariadne import gql, make_executable_schema, graphql_sync, upload_scalar
+from ariadne.file_uploads import combine_multipart_data
 from ariadne.explorer import ExplorerGraphiQL
 from flask import Flask, jsonify, request
 from modules.models.base import db
@@ -18,7 +20,7 @@ checked_types = gql(type_defs)
 schema = make_executable_schema(
     checked_types,
     [
-        query, mutation, category, date_scalar, datetime_scalar,
+        query, mutation, category, date_scalar, datetime_scalar, upload_scalar,
         group, order, purchase, worker, user_union, base_order_union,
      ],
     convert_names_case=True
@@ -35,14 +37,22 @@ def graphql_explorer():
 
 @app.route('/graphql', methods=['POST'])
 def graphql_server():
-    data = request.get_json()
+    if request.content_type.startswith('multipart/form-data'):
+        # если пришели файлы, то объединяем запрос (operations), файлы (files) и
+        # map (какой файл относится к какой переменной),
+        data = combine_multipart_data(
+            json.loads(request.form.get('operations')),
+            json.loads(request.form.get('map')),
+            dict(request.files)
+        )
+    else:
+        data = request.get_json()
     success, result = graphql_sync(
         schema,
         data,
-        context_value={'request': request},
+        context_value=request,
         debug=app.debug
     )
-
     status_code = 200 if success else 400
     return jsonify(result), status_code
 

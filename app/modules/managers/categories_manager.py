@@ -9,6 +9,8 @@ from ..models.sales import Sale
 from ..models.base import db
 from ..models.orders import Purchase
 from ..settings import settings
+from ..utils.file_manager import FileManager
+from werkzeug.datastructures import FileStorage
 
 
 class CategoriesManager:
@@ -251,14 +253,17 @@ class CategoriesManager:
         return categories.offset(offset).limit(limit), pages_count
 
     @staticmethod
-    def save_category(category: Category):
+    def save_category(category: Category, file: Optional[FileStorage]):
         db.session.add(category)
+        if file is not None:
+            category.main_photo_path = FileManager.save_file(file, category.main_photo_path)
         db.session.commit()
 
     @staticmethod
     def delete_category(category: Category):
         db.session.add(category)
         category.date_deleted = datetime.now(tz=settings.TIMEZONE)
+        FileManager.delete_file(category.main_photo_path)
         db.session.commit()
 
     @staticmethod

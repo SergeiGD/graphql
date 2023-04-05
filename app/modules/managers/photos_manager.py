@@ -1,6 +1,11 @@
+from typing import Optional
+from ..settings import settings
 from sqlalchemy import inspect, func
 from ..models.photos import Photo
 from ..models.base import db
+from ..utils.file_manager import FileManager
+from werkzeug.datastructures import FileStorage
+import uuid
 
 
 class PhotosManager:
@@ -38,11 +43,12 @@ class PhotosManager:
             Photo.category_id == photo.category_id,
             Photo.order > photo.order
         ).update({'order': Photo.order - 1})
+        FileManager.delete_file(photo.path)
         db.session.delete(photo)
         db.session.commit()
 
     @staticmethod
-    def save_photo(photo: Photo):
+    def save_photo(photo: Photo, file: Optional[FileStorage]):
         db.session.add(photo)
 
         # если обновляли и поменяли порядок, то меняем местами
@@ -63,6 +69,10 @@ class PhotosManager:
                     photo.order = 1
                 else:
                     photo.order = current_max + 1
+
+        if file is not None:
+            path = FileManager.save_file(file, photo.path)
+            photo.path = path
 
         db.session.commit()
 

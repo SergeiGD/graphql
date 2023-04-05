@@ -1,4 +1,6 @@
 from datetime import datetime
+from typing import Optional
+
 from ..settings import settings
 from ..models.base import db
 from ..models.rooms import Room

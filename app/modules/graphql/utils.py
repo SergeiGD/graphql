@@ -51,7 +51,7 @@ def token_required(f):
     @wraps(f)
     def decorated_token(*args, **kwargs):
         info = args[1]  # втором аргументом резольверу всегда приходит информация о запросе
-        request = info.context['request']  # получаем реквест
+        request = info.context  # получаем реквест
         auth_header = request.headers.get('Authorization', '')  # получаем значения в заголовке Authorization
         keys = auth_header.split()  # т.к. это будет строка вида Bearer token, приводим ее к списку для удобства
 

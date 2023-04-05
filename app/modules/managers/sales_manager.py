@@ -1,21 +1,28 @@
 import math
 from datetime import datetime
+from typing import Optional
+
 from sqlalchemy import desc
 from ..models.base import db
 from ..models.sales import Sale
 from ..settings import settings
+from ..utils.file_manager import FileManager
+from werkzeug.datastructures import FileStorage
 
 
 class SalesManager:
     @staticmethod
-    def save_sale(sale: Sale):
+    def save_sale(sale: Sale, file: Optional[FileStorage]):
         db.session.add(sale)
+        if file is not None:
+            sale.image_path = FileManager.save_file(file, sale.image_path)
         db.session.commit()
 
     @staticmethod
     def delete_sale(sale: Sale):
         db.session.add(sale)
         sale.date_deleted = datetime.now(tz=settings.TIMEZONE)
+        FileManager.delete_file(sale.image_path)
         db.session.commit()
 
     @staticmethod

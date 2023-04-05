@@ -6,14 +6,15 @@ from ...models.sales import Sale
 from ...models.base import db
 from ...managers.categories_manager import CategoriesManager
 from ..utils import return_validation_error, return_not_found_error, update_fields, token_required, permission_required
+from werkzeug.datastructures import FileStorage
 
 
 @token_required
 @permission_required(permissions=['add_category'])
-def resolve_create_category(*_, input: dict, current_user):
+def resolve_create_category(*_, input: dict, file: FileStorage, current_user):
     try:
         category = Category(**input)
-        CategoriesManager.save_category(category)
+        CategoriesManager.save_category(category, file)
     except ValueError as validation_error:
         return return_validation_error(validation_error)
     return {'category': category, 'status': {
@@ -23,7 +24,7 @@ def resolve_create_category(*_, input: dict, current_user):
 
 @token_required
 @permission_required(permissions=['edit_category'])
-def resolve_update_category(*_, id: int, input: dict, current_user):
+def resolve_update_category(*_, id: int, input: dict, file: Optional[FileStorage] = None, current_user):
     category: Category = db.session.query(Category).filter(
         Category.id == id
     ).first()
@@ -31,7 +32,7 @@ def resolve_update_category(*_, id: int, input: dict, current_user):
         return return_not_found_error(Category.REPR_MODEL_NAME)
     try:
         update_fields(category, input)
-        CategoriesManager.save_category(category)
+        CategoriesManager.save_category(category, file)
     except ValueError as validation_error:
         return return_validation_error(validation_error)
     return {'category': category, 'status': {

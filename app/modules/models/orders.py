@@ -22,9 +22,9 @@ class Purchase(db.Model):
     price: Mapped[Decimal] = mapped_column(DECIMAL(precision=10, scale=2), default=0)
     prepayment: Mapped[Decimal] = mapped_column(DECIMAL(precision=10, scale=2), default=0)
     refund: Mapped[Decimal] = mapped_column(DECIMAL(precision=10, scale=2), default=0)
-    is_paid: Mapped[bool] = mapped_column(default=False)
-    is_prepayment_paid: Mapped[bool] = mapped_column(default=False)
-    is_canceled: Mapped[bool] = mapped_column(default=False)
+    is_paid: Mapped[bool] = mapped_column(default=False, index=True)
+    is_prepayment_paid: Mapped[bool] = mapped_column(default=False, index=True)
+    is_canceled: Mapped[bool] = mapped_column(default=False, index=True)
 
     order_id: Mapped[int] = mapped_column(ForeignKey('base_order.id'))
     order: Mapped['BaseOrder'] = relationship(back_populates='purchases')
@@ -115,8 +115,8 @@ class Order(BaseOrder):
     refunded: Mapped[Decimal] = mapped_column(DECIMAL(precision=10, scale=2), default=0)
     date_full_prepayment: Mapped[Optional[datetime]]
     date_full_paid: Mapped[Optional[datetime]]
-    date_finished: Mapped[Optional[datetime]]
-    date_canceled: Mapped[Optional[datetime]]
+    date_finished: Mapped[Optional[datetime]] = mapped_column(index=True)
+    date_canceled: Mapped[Optional[datetime]] = mapped_column(index=True)
 
     client_id: Mapped[int] = mapped_column(ForeignKey("people.id"))
     client: Mapped['users.User'] = relationship(back_populates='orders')

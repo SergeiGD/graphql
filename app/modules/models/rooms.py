@@ -15,7 +15,7 @@ class Room(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     room_number: Mapped[int]
     date_created: Mapped[datetime] = mapped_column(default=datetime.now(tz=settings.TIMEZONE))
-    date_deleted: Mapped[Optional[datetime]]
+    date_deleted: Mapped[Optional[datetime]] = mapped_column(index=True)
 
     category_id: Mapped[int] = mapped_column(ForeignKey("category.id"))
     category: Mapped['categories.Category'] = relationship(back_populates='rooms')

@@ -16,7 +16,7 @@ class Category(db.Model):
     REPR_MODEL_NAME = 'категория'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str]
+    name: Mapped[str] = mapped_column(index=True)
     description: Mapped[str]
     price: Mapped[Decimal] = mapped_column(DECIMAL(precision=10, scale=2))
     prepayment_percent: Mapped[float]
@@ -27,8 +27,8 @@ class Category(db.Model):
     beds: Mapped[int]
     square: Mapped[float]
     date_created: Mapped[datetime] = mapped_column(default=datetime.now(tz=settings.TIMEZONE))
-    date_deleted: Mapped[Optional[datetime]]
-    is_hidden: Mapped[bool] = mapped_column(default=False)
+    date_deleted: Mapped[Optional[datetime]] = mapped_column(index=True)
+    is_hidden: Mapped[bool] = mapped_column(default=False, index=True)
 
     tags: Mapped[List['tags.Tag']] = relationship(
         secondary='category_tag',

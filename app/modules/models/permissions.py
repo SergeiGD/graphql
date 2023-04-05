@@ -10,7 +10,7 @@ class Permission(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
-    code: Mapped[str] = mapped_column(unique=True)
+    code: Mapped[str] = mapped_column(unique=True, index=True)
 
     # category_id: Mapped[int] = mapped_column(ForeignKey('category.id'))
     # category: Mapped['categories.Category'] = relationship(back_populates='photos')

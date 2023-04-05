@@ -1,5 +1,6 @@
 from datetime import date, timedelta, datetime
 from typing import Optional
+import math
 from sqlalchemy import func, text, desc
 from ..models.categories import Category
 from ..models.rooms import Room
@@ -90,6 +91,15 @@ class CategoriesManager:
         :param day: дата, на которую будет осуществлена проверка
         :return:
         """
+        #  если нету комнат, то возвращаем как занятно
+        if not db.session.query(
+                db.session.query(Room).filter(
+                    Room.category_id == category.id,
+                    Room.date_deleted == None,
+                ).exists()
+        ).scalar():
+            return True
+
         # получаем брони, которые есть на этот день
         purchases = db.session.query(Purchase.room_id).filter(
             Purchase.start <= day,
@@ -154,6 +164,91 @@ class CategoriesManager:
             Category.id.in_([item[0] for item in familiar_ids])
         )
         return familiar_items
+
+    @staticmethod
+    def filter(filter: dict):
+        """
+        Фильтрация категорий
+        :param filter: параметры сортировки
+        :return:
+        """
+        categories = db.session.query(Category).filter_by(date_deleted=None)
+        if not filter['show_hidden']:
+            categories = categories.filter_by(is_hidden=False)
+        if 'id' in filter:
+            categories = categories.filter(
+                Category.id == filter['id']
+            )
+        if 'name' in filter:
+            categories = categories.filter(
+                Category.name.icontains(filter['name'])
+            )
+        if 'beds_from' in filter:
+            categories.filter(
+                Category.beds >= filter['beds_from']
+            )
+        if 'beds_until' in filter:
+            categories.filter(
+                Category.beds <= filter['beds_until']
+            )
+        if 'floors_from' in filter:
+            categories.filter(
+                Category.floors >= filter['floors_from']
+            )
+        if 'floors_until' in filter:
+            categories.filter(
+                Category.floors <= filter['floors_until']
+            )
+        if 'square_from' in filter:
+            categories = categories.filter(
+                Category.square >= filter['square_from']
+            )
+        if 'square_until' in filter:
+            categories = categories.filter(
+                Category.square <= filter['square_until']
+            )
+        if 'price_from' in filter:
+            categories = categories.filter(
+                Category.price >= filter['price_from']
+            )
+        if 'price_until' in filter:
+            categories = categories.filter(
+                Category.price <= filter['price_until']
+            )
+        if 'rooms_from' in filter:
+            categories = categories.filter(
+                Category.rooms_count >= filter['rooms_from']
+            )
+        if 'rooms_until' in filter:
+            categories = categories.filter(
+                Category.rooms_count <= filter['rooms_until']
+            )
+        if 'free_dates' in filter:
+            categories_to_check = categories.all()
+            date_from = filter['free_dates']['date_from']
+            date_until = filter['free_dates']['date_until']
+            if (date_until - date_from).days > 31:
+                raise ValueError('нельзя запросить больше 31 дня')
+            busy_categories_ids = []
+            for category in categories_to_check:
+                if CategoriesManager.get_busy_dates(category, date_from, date_until):
+                    busy_categories_ids.append(category.id)
+            categories = categories.filter(
+                Category.id.not_in(busy_categories_ids)
+            )
+
+        if filter['desc']:
+            categories = categories.order_by(desc(filter['sort_by']))
+        else:
+            categories = categories.order_by(filter['sort_by'])
+
+        if filter['page_size'] < 1 or filter['page'] < 1:
+            raise ValueError('страница и кол-во выводимых элментов не может быть меньше 1')
+
+        limit = filter['page_size']
+        offset = filter['page_size'] * (filter['page'] - 1)
+        pages_count = math.ceil(categories.count() / filter['page_size'])
+        return categories.offset(offset).limit(limit), pages_count
 
     @staticmethod
     def save_category(category: Category):

@@ -10,12 +10,9 @@ from modules.graphql.types import (
 )
 from modules.settings import settings
 
-# TODO: индексы прокинуть
-# TODO: поиск
-# TODO: cron для очищения корзины и заказов
+# TODO: миграции БД
 # TODO: dataclasses
 # TODO: типизацию
-
 
 checked_types = gql(type_defs)
 schema = make_executable_schema(
@@ -31,18 +28,18 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = settings.SECRET_KEY
 
 
-@app.route("/graphql", methods=["GET"])
+@app.route('/graphql', methods=['GET'])
 def graphql_explorer():
     return explorer_html, 200
 
 
-@app.route("/graphql", methods=["POST"])
+@app.route('/graphql', methods=['POST'])
 def graphql_server():
     data = request.get_json()
     success, result = graphql_sync(
         schema,
         data,
-        context_value={"request": request},
+        context_value={'request': request},
         debug=app.debug
     )
 
@@ -50,7 +47,7 @@ def graphql_server():
     return jsonify(result), status_code
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     db_name = environ.get('DB_NAME', 'db_graphql')
     db_user = environ.get('DB_USER', 'db_user')
     db_password = environ.get('DB_PASSWORD', 'db_password')

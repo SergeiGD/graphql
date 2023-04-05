@@ -54,14 +54,12 @@ def resolve_delete_category(*_, id: int, current_user):
     }}
 
 
-def resolve_categories(*_, cat_id: Optional[int] = None):
-    if cat_id:
-        category = db.session.query(Category).filter_by(id=cat_id, date_deleted=None)
-        return {'categories': category, 'status': {
-            'success': True,
-        }}
-    categories = db.session.query(Category).filter_by(date_deleted=None)
-    return {'categories': categories, 'status': {
+def resolve_categories(*_, filter: dict):
+    try:
+        categories, pages_count = CategoriesManager.filter(filter)
+    except ValueError as filter_error:
+        return return_validation_error(filter_error)
+    return {'categories': categories, 'pages_count': pages_count, 'status': {
         'success': True,
     }}
 
@@ -71,7 +69,14 @@ def resolve_category_familiar(obj: Category, *_):
 
 
 def resolve_category_busy_dates(obj: Category, _, date_start: date, date_end: date):
-    return CategoriesManager.get_busy_dates(obj, date_start, date_end)
+    if (date_end - date_start).days > 31:
+        return {'status': {
+            'success': False,
+            'error': 'нельзя запросить больше 31 дня'
+        }}
+    return {'dates': CategoriesManager.get_busy_dates(obj, date_start, date_end), 'status': {
+        'success': True,
+    }}
 
 
 @token_required
@@ -154,5 +159,3 @@ def resolve_remove_sale_from_category(*_, sale_id: int, category_id: int, curren
     return {'sale': sale, 'category': category, 'status': {
         'success': True,
     }}
-
-

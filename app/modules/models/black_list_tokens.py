@@ -1,6 +1,7 @@
-import uuid
+from datetime import datetime
 from .base import db
 from sqlalchemy.orm import Mapped, mapped_column
+from ..settings import settings
 
 
 class BlackListJWT(db.Model):
@@ -8,4 +9,4 @@ class BlackListJWT(db.Model):
     REPR_MODEL_NAME = 'использованный токен'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    token: Mapped[str]
+    token: Mapped[str] = mapped_column(index=True)

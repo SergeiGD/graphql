@@ -3,21 +3,70 @@ type_defs = """
     scalar Date
     union UserUnion = Client | Worker
     union BaseOrderUnion = Order | Cart
+    
+    enum CategorySortBy{
+        id
+        name
+        beds
+        square
+        floors
+        rooms_count
+        price
+    }
 
     type Query {
         getTags(tagId: Int): TagsResult!
-        getCategories(catId: Int): CategoriesResult!
+        getCategories(filter: CategoriesFilter!): CategoriesResult!
         getRooms(roomId: Int): RoomsResult!
         getPhotos(photoId: Int): PhotosResult!
         getClients(clientId: Int): ClientsResult!
         getOrders(orderId: Int): OrdersResult!
         getPurchases(purchaseId: Int): PurchasesResult!
-        getSales(saleId: Int): SalesResult!
+        getSales(filter: SalesFilter!): SalesResult!
         getWorkers(workerId: Int): WorkersResult!
         getGroups(groupId: Int): GroupsResult!
         getPermissions(permissionId: Int): PermissionsResult!
         getCart(cartUuid: String!): CartResult!
         getClientOrders(orderId: Int): ClientOrdersResult!
+    }
+    
+    input CategoriesFilter {
+        id: Int
+        name: String
+        showHidden: Boolean = false
+        bedsFrom: Int
+        bedsUntil: Int
+        floorsFrom: Int
+        floorsUntil: Int
+        squareFrom: Int
+        squareUntil: Int
+        freeDates: FreeDates
+        roomsFrom: Int
+        roomsUntil: Int
+        priceFrom: Int
+        priceUntil: Int
+        page: Int = 1
+        pageSize: Int = 8
+        sortBy: CategorySortBy = id
+        desc: Boolean = false
+    }
+    
+    input SalesFilter {
+        id: Int
+        name: String
+        discountFrom: Int
+        discountUntil: Int
+        dateFrom: Date
+        dateUntil: Date
+        page: Int = 1
+        pageSize: Int = 8
+        sortBy: CategorySortBy = id
+        desc: Boolean = false
+    }
+    
+    input FreeDates{
+        dateFrom: Date!
+        dateUntil: Date!
     }
     
     type RoomsResult {
@@ -28,6 +77,7 @@ type_defs = """
      type CategoriesResult {
         status: MutationStatus!
         categories: [Category]
+        pagesCount: Int
     }
     
     type WorkersResult {
@@ -73,6 +123,7 @@ type_defs = """
     type SalesResult {
         status: MutationStatus!
         sales: [Sale]
+        pagesCount: Int
     }
     
     type TagsResult {
@@ -83,6 +134,11 @@ type_defs = """
     type CartResult {
         status: MutationStatus!
         cart: Cart
+    }
+    
+    type BookedDatesResult{
+        dates: [Date]
+        status: MutationStatus
     }
     
     type Mutation {
@@ -441,6 +497,11 @@ type_defs = """
         end: Date
     }
     
+    input DatesInput {
+        dateStart: Date,
+        dateEnd: Date
+    }
+    
     input SingUpInput {
         email: String!
         password: String!
@@ -592,15 +653,10 @@ type_defs = """
         beds: Int!
         square: Float!
         tags: [Tag]!
-        rooms: RoomsResult!
+        rooms: [Room]!
         familiar: [Category]!
         sales: [Sale]!
-        bookedDates(dateStart: Date!, dateEnd: Date!): [Date]!
-    }
-    
-    input DatesInput {
-        dateStart: Date,
-        dateEnd: Date
+        bookedDates(dateStart: Date!, dateEnd: Date!): BookedDatesResult!
     }
     
     type Client {

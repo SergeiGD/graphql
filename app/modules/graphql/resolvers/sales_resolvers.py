@@ -51,13 +51,12 @@ def resolve_delete_sale(*_, id: int, current_user):
     }}
 
 
-def resolve_sales(*_, sale_id: Optional[int] = None):
-    if sale_id:
-        sale = db.session.query(Sale).filter_by(id=sale_id, date_deleted=None)
-        return {'sales': sale, 'status': {
-            'success': True,
-        }}
-    sales = db.session.query(Sale).filter_by(date_deleted=None)
-    return {'sales': sales, 'status': {
+def resolve_sales(*_, filter: dict):
+    try:
+        sales, pages_count = SalesManager.filter(filter)
+    except ValueError as filter_error:
+        return return_validation_error(filter_error)
+    return {'sales': sales, 'pages_count': pages_count, 'status': {
         'success': True,
     }}
+

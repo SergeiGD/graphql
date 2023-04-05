@@ -1,6 +1,7 @@
 from datetime import datetime
 from ..settings import settings
 from sqlalchemy.orm import Mapped, relationship, mapped_column, validates
+from sqlalchemy import Index
 from typing import List, Optional
 from .base import db
 from sqlalchemy import Column, Table, ForeignKey, event
@@ -17,17 +18,18 @@ category_sale = Table(
 
 class Sale(db.Model):
     __tablename__ = 'sale'
+    __table_args__ = (Index('dates_index', 'start_date', 'end_date'), )
     REPR_MODEL_NAME = 'скидка'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str]
+    name: Mapped[str] = mapped_column(index=True)
     description: Mapped[str]
     discount: Mapped[float]
     image_path: Mapped[str]
     start_date: Mapped[datetime]
     end_date: Mapped[datetime]
     date_created: Mapped[datetime] = mapped_column(default=datetime.now(tz=settings.TIMEZONE))
-    date_deleted: Mapped[Optional[datetime]]
+    date_deleted: Mapped[Optional[datetime]] = mapped_column(index=True)
 
     categories: Mapped[List['categories.Category']] = relationship(
         secondary=category_sale,

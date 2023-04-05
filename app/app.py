@@ -1,11 +1,10 @@
 import json
 from os import environ
-from ariadne import gql, make_executable_schema, graphql_sync, upload_scalar
+from ariadne import gql, make_executable_schema, graphql_sync, upload_scalar, load_schema_from_path
 from ariadne.file_uploads import combine_multipart_data
 from ariadne.explorer import ExplorerGraphiQL
 from flask import Flask, jsonify, request
 from modules.models.base import db
-from modules.graphql.schema import type_defs
 from modules.graphql.types import (
     mutation, query, datetime_scalar, date_scalar, user_union, base_order_union,
     category, group, order, purchase, worker,
@@ -16,6 +15,7 @@ from modules.settings import settings
 # TODO: dataclasses
 # TODO: типизацию
 
+type_defs = load_schema_from_path('./modules/graphql/schema ')
 checked_types = gql(type_defs)
 schema = make_executable_schema(
     checked_types,

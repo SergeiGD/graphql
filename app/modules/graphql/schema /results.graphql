@@ -1,0 +1,182 @@
+type RoomsResult {
+    status: OperationStatus!
+    rooms: [Room]
+}
+
+ type CategoriesResult {
+    status: OperationStatus!
+    categories: [Category]
+    pagesCount: Int
+}
+
+type WorkersResult {
+    status: OperationStatus!
+    workers: [Worker]
+}
+
+type GroupsResult {
+    status: OperationStatus!
+    groups: [Group]
+}
+
+type PermissionsResult {
+    status: OperationStatus!
+    permissions: [Permission]
+}
+
+type ClientsResult {
+    status: OperationStatus!
+    clients: [Client]
+}
+
+type OrdersResult {
+    status: OperationStatus!
+    orders: [Order]
+}
+
+type PurchasesResult {
+    status: OperationStatus!
+    purchases: [Purchase]
+}
+
+type PhotosResult {
+    status: OperationStatus!
+    photos: [Photo]
+}
+
+type ClientOrdersResult {
+    status: OperationStatus!
+    orders: [ClientOrder]
+}
+
+type SalesResult {
+    status: OperationStatus!
+    sales: [Sale]
+    pagesCount: Int
+}
+
+type TagsResult {
+    status: OperationStatus!
+    tags: [Tag]
+}
+
+type CartResult {
+    status: OperationStatus!
+    cart: Cart
+}
+
+type BookedDatesResult{
+    dates: [Date]
+    status: OperationStatus
+}
+
+
+
+type RoomResult {
+    status: OperationStatus!
+    room: Room
+}
+
+type ClientResult {
+    status: OperationStatus!
+    client: Client
+}
+
+type WorkerResult {
+    status: OperationStatus!
+    worker: Worker
+}
+
+type GroupResult {
+    status: OperationStatus!
+    group: Group
+}
+
+type OrderResult {
+    status: OperationStatus!
+    order: Order
+}
+
+type ClientOrderResult {
+    status: OperationStatus!
+    order: ClientOrder
+}
+
+type CategoryResult {
+    status: OperationStatus!
+    category: Category
+}
+
+type UsersResult {
+    status: OperationStatus!
+    users: [UserUnion]
+}
+
+type BaseOrderResult {
+    status: OperationStatus!
+    order: BaseOrderUnion
+}
+
+type PhotoResult {
+    status: OperationStatus!
+    photo: Photo
+}
+
+type TagResult {
+    status: OperationStatus!
+    tag: Tag
+}
+
+type PurchaseResult {
+    status: OperationStatus!
+    purchase: Purchase
+}
+
+type LoginResult {
+    status: OperationStatus!
+    tokens: AuthTokens
+}
+
+type AccountActionResult {
+    status: OperationStatus!
+    token: String
+    user: User
+}
+
+type SaleResult {
+    status: OperationStatus!
+    sale: Sale
+}
+
+type UserResult {
+    status: OperationStatus!
+    user: User
+}
+
+type TagCategoryResult {
+    status: OperationStatus!
+    tag: Tag
+    category: Category
+}
+
+type WorkerGroupResult {
+    status: OperationStatus!
+    group: Group
+    worker: Worker
+}
+
+type GroupPermissionResult {
+    status: OperationStatus!
+    group: Group
+    permission: Permission
+}
+
+type SaleCategoryResult {
+    status: OperationStatus!
+    sale: Sale
+    category: Category
+}
+
+type DeleteResult {
+    status: OperationStatus!
+}

@@ -1,0 +1,151 @@
+
+type Room {
+    id: Int!
+    roomNumber: Int!
+    category: Category!
+}
+
+type Photo {
+    id: Int!
+    order: Int!
+    category: Category!
+    path: String!
+}
+
+type Tag {
+    id: Int!
+    name: String!
+    categories: [Category]!
+}
+
+type Category {
+    id: Int!
+    name: String!
+    description: String!
+    price: Float!
+    prepaymentPercent: Float!
+    refundPercent: Float!
+    mainPhotoPath: String!
+    roomsCount: Int!
+    floors: Int!
+    beds: Int!
+    square: Float!
+    tags: [Tag]!
+    rooms: [Room]!
+    familiar: [Category]!
+    sales: [Sale]!
+    bookedDates(dateStart: Date!, dateEnd: Date!): BookedDatesResult!
+}
+
+type Client {
+    id: Int!
+    firstName: String
+    lastName: String
+    email: String!
+    dateOfBirth: Date
+}
+
+type User {
+    id: Int!
+    firstName: String
+    lastName: String
+    email: String!
+    dateCreated: String!
+    isConfirmed: String!
+}
+
+type Order {
+    id: Int!
+    dateCreated: Datetime!
+    price: Float!
+    prepayment: Float!
+    comment: String
+    paid: Float!
+    refunded: Float!
+    leftToPay: Float!
+    leftToRefund: Float!
+    dateFullPrepayment: Datetime
+    dateFullPaid: Datetime
+    dateFinished: Datetime
+    dateCanceled: Datetime
+    client: ClientResult!
+    purchases: PurchasesResult!
+}
+
+type ClientOrder {
+    id: Int!
+    price: Float!
+    prepayment: Float!
+    comment: String
+    paid: Float!
+    refunded: Float!
+    leftToPay: Float!
+    leftToRefund: Float!
+    dateCreated: Datetime!
+    dateFullPrepayment: Datetime
+    dateFullPaid: Datetime
+    dateFinished: Datetime
+    dateCanceled: Datetime
+    purchases: [Purchase]!
+}
+
+type Cart {
+    id: Int!
+    cartUuid: String!
+    dateCreated: Datetime!
+    price: Float!
+    prepayment: Float!
+    purchases: [Purchase]!
+}
+
+type Purchase {
+    id: Int!
+    start: Date!
+    end: Date!
+    price: Float!
+    prepayment: Float!
+    refund: Float
+    isPaid: Boolean!
+    isPrepaymentPaid: Boolean!
+    isCanceled: Boolean!
+    order: BaseOrderResult!
+    room: Room!
+}
+
+type Sale {
+    id: Int!
+    name: String!
+    description: String!
+    discount: Float!
+    imagePath: String!
+    startDate: Datetime!
+    endDate: Datetime!
+    categories: [Category]!
+}
+
+type Permission {
+    id: Int!
+    name: String!
+    code: String!
+}
+
+type Group {
+    id: Int!
+    name: String!
+    permissions: PermissionsResult!
+    users: UsersResult!
+}
+
+type Worker {
+    id: Int!
+    firstName: String
+    lastName: String
+    email: String!
+    salary: Float!
+    groups: GroupsResult!
+}
+
+type AuthTokens {
+    accessToken: String!
+    refreshToken: String!
+}

@@ -1,0 +1,226 @@
+type Mutation {
+    createTag(
+        input: CreateTagInput!
+    ): TagResult!
+
+    createCategory(
+        input: CreateCategoryInput!
+        file: Upload!
+    ): CategoryResult
+
+    createRoom(
+        input: CreateRoomInput!
+    ): RoomResult!
+
+    createPhoto(
+        input: CreatePhotoInput!
+        file: Upload!
+    ): PhotoResult!
+
+    createClient(
+        input: CreateClientInput!
+    ): ClientResult!
+
+    createOrder(
+        input: CreateOrderInput!
+    ): OrderResult!
+
+    createCart: Cart!
+
+    createPurchase(
+        input: CreatePurchaseInput!
+    ): PurchaseResult!
+
+    createCartPurchase(
+        cartUuid: String!
+        input: CreateCartPurchaseInput!
+    ): PurchaseResult!
+
+    createSale(
+        input: CreateSaleInput!
+        file: Upload!
+    ): SaleResult!
+
+    createWorker(
+        input: CreateWorkerInput!
+    ): WorkerResult!
+
+    createGroup(
+        input: CreateGroupInput!
+    ): GroupResult!
+
+    updatePhoto(
+        id: Int!
+        input: UpdatePhotoInput!
+        file: Upload
+    ): PhotoResult!
+
+    updateCategory(
+        id: Int!
+        file: Upload
+        input: UpdateCategoryInput!
+    ): CategoryResult!
+
+    updateRoom(
+        id: Int!
+        input: UpdateRoomInput!
+    ): RoomResult!
+
+    updateTag(
+        id: Int!
+        input: UpdateTagInput!
+    ): TagResult!
+
+    updateClient(
+        id: Int!
+        input: UpdateClientInput!
+    ): ClientResult!
+
+    updateWorker(
+        id: Int!
+        input: UpdateWorkerInput!
+    ): WorkerResult!
+
+    updateGroup(
+        input: UpdateGroupInput!
+    ): GroupResult!
+
+    updateOrder(
+        id: Int!
+        input: UpdateOrderInput!
+    ): OrderResult!
+
+    updatePurchase(
+        id: Int!
+        input: UpdatePurchaseInput!
+    ): PurchaseResult!
+
+    updateCartPurchase(
+        cartUuid: String!
+        id: Int!
+        input: UpdatePurchaseInput!
+    ): PurchaseResult!
+
+    updateSale(
+        id: Int!
+        input: UpdateSaleInput!
+        file: Upload
+    ): SaleResult!
+
+    deleteRoom(
+        id: Int!
+    ): DeleteResult!
+
+    deletePhoto(
+        id: Int!
+    ): DeleteResult!
+
+    deleteSale(
+        id: Int!
+    ): DeleteResult!
+
+    deleteCategory(
+        id: Int!
+    ): DeleteResult!
+
+    deleteTag(
+        id: Int!
+    ): DeleteResult!
+
+    deleteGroup(
+        id: Int!
+    ): DeleteResult!
+
+    cancelPurchase(
+        id: Int!
+    ): PurchaseResult!
+
+    cancelCartPurchase(
+        cartUuid: String!
+        id: Int!
+    ): PurchaseResult!
+
+    cancelOrder(
+        id: Int!
+    ): OrderResult!
+
+    addTagToCategory(
+        tagId: Int!
+        categoryId: Int!
+    ): TagCategoryResult!
+
+    addSaleToCategory(
+        saleId: Int!
+        categoryId: Int!
+    ): SaleCategoryResult!
+
+    addGroupToWorker(
+        groupId: Int!
+        workerId: Int!
+    ): WorkerGroupResult!
+
+    addPermissionToGroup(
+        groupId: Int!
+        permissionId: Int!
+    ): GroupPermissionResult!
+
+    removeTagFromCategory(
+        tagId: Int!
+        categoryId: Int!
+    ): TagCategoryResult!
+
+    removeSaleFromCategory(
+        saleId: Int!
+        categoryId: Int!
+    ): SaleCategoryResult!
+
+    removeGroupFromWorker(
+        groupId: Int!
+        workerId: Int!
+    ): WorkerGroupResult!
+
+     removePermissionFromGroup(
+        groupId: Int!
+        permissionId: Int!
+    ): GroupPermissionResult!
+
+    login(
+        login: String!
+        password: String!
+    ): LoginResult!
+
+    singUp(
+        input: SingUpInput!
+    ): AccountActionResult!
+
+    confirmAccount(
+        token: String!
+    ): UserResult!
+
+    requestReset(
+        email: String!
+    ): AccountActionResult!
+
+    confirmReset(
+        token: String!
+        password: String!
+    ): UserResult!
+
+    refreshToken(
+        refreshToken: String!
+    ): LoginResult!
+
+    confirmCart(
+        cartUuid: String!
+        email: String!
+        isFullyPaid: Boolean!
+    ): ClientOrderResult!
+
+    payClientOrder(
+        id: Int!
+    ): ClientOrderResult!
+
+    cancelClientOrder(
+        id: Int!
+    ): ClientOrderResult!
+}

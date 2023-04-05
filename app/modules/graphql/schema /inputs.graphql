@@ -1,0 +1,177 @@
+input CreateRoomInput {
+    roomNumber: Int
+    categoryId: Int!
+}
+
+input CreateCategoryInput {
+    name: String!
+    description: String!
+    price: Float!
+    prepaymentPercent: Float!
+    refundPercent: Float!
+    roomsCount: Int!
+    floors: Int!
+    beds: Int!
+    square: Float!
+}
+
+input CreatePhotoInput {
+    categoryId: Int!
+}
+
+input CreateClientInput {
+    firstName: String
+    lastName: String
+    email: String!
+    dateOfBirth: Date
+}
+
+input CreateWorkerInput {
+    firstName: String
+    lastName: String
+    email: String!
+    salary: Float!
+}
+
+input CreateGroupInput {
+    name: String!
+}
+
+input CreateTagInput {
+    name: String!
+}
+
+input CreateOrderInput {
+    clientId: Int!
+}
+
+input CreatePurchaseInput {
+    start: Date!
+    end: Date!
+    categoryId: Int!
+    orderId: Int!
+}
+
+input CreateCartPurchaseInput {
+    start: Date!
+    end: Date!
+    categoryId: Int!
+}
+
+input CreateSaleInput {
+    name: String!
+    description: String!
+    discount: Float!
+    startDate: Datetime!
+    endDate: Datetime!
+}
+
+input UpdatePhotoInput {
+    order: Int
+}
+
+input UpdateRoomInput {
+    roomNumber: Int
+}
+
+input UpdateCategoryInput {
+    name: String
+    description: String
+    price: Float
+    prepaymentPercent: Float
+    refundPercent: Float
+    roomsCount: Int
+    floors: Int
+    beds: Int
+    square: Float
+}
+
+input UpdateClientInput {
+    firstName: String
+    lastName: String
+    email: String
+    dateOfBirth: Date
+}
+
+input UpdateWorkerInput {
+    firstName: String
+    lastName: String
+    email: String
+    salary: Float
+}
+
+input UpdateGroupInput {
+    name: String
+}
+
+input UpdateTagInput {
+    name: String
+}
+
+input UpdateSaleInput {
+    name: String
+    description: String
+    discount: Float
+    startDate: Datetime
+    endDate: Datetime
+}
+
+input UpdateOrderInput {
+    comment: String
+    paid: Float
+    refunded: Float
+}
+
+input UpdatePurchaseInput {
+    start: Date
+    end: Date
+}
+
+input DatesInput {
+    dateStart: Date,
+    dateEnd: Date
+}
+
+input SingUpInput {
+    email: String!
+    password: String!
+}
+
+input CategoriesFilter {
+    id: Int
+    name: String
+    showHidden: Boolean = false
+    bedsFrom: Int
+    bedsUntil: Int
+    floorsFrom: Int
+    floorsUntil: Int
+    squareFrom: Int
+    squareUntil: Int
+    freeDates: FreeDates
+    roomsFrom: Int
+    roomsUntil: Int
+    priceFrom: Int
+    priceUntil: Int
+    page: Int = 1
+    pageSize: Int = 8
+    sortBy: CategorySortBy = id
+    desc: Boolean = false
+}
+
+input SalesFilter {
+    id: Int
+    name: String
+    discountFrom: Int
+    discountUntil: Int
+    dateFrom: Date
+    dateUntil: Date
+    page: Int = 1
+    pageSize: Int = 8
+    sortBy: CategorySortBy = id
+    desc: Boolean = false
+}
+
+input FreeDates{
+    dateFrom: Date!
+    dateUntil: Date!
+}

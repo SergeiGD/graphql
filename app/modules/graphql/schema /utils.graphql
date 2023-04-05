@@ -1,0 +1,20 @@
+scalar Datetime
+scalar Date
+scalar Upload
+union UserUnion = Client | Worker
+union BaseOrderUnion = Order | Cart
+
+enum CategorySortBy{
+    id
+    name
+    beds
+    square
+    floors
+    roomsCount
+    price
+}
+
+type OperationStatus {
+    success: Boolean!
+    error: String
+}

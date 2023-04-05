@@ -1,0 +1,15 @@
+type Query {
+    getTags(tagId: Int): TagsResult!
+    getCategories(filter: CategoriesFilter!): CategoriesResult!
+    getRooms(roomId: Int): RoomsResult!
+    getPhotos(photoId: Int): PhotosResult!
+    getClients(clientId: Int): ClientsResult!
+    getOrders(orderId: Int): OrdersResult!
+    getPurchases(purchaseId: Int): PurchasesResult!
+    getSales(filter: SalesFilter!): SalesResult!
+    getWorkers(workerId: Int): WorkersResult!
+    getGroups(groupId: Int): GroupsResult!
+    getPermissions(permissionId: Int): PermissionsResult!
+    getCart(cartUuid: String!): CartResult!
+    getClientOrders(orderId: Int): ClientOrdersResult!
+}

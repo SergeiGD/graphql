@@ -41,6 +41,7 @@ from .resolvers.client_orders_resolvers import (
     resolve_cancel_client_order, resolve_client_orders, resolve_client_pay_order
 )
 
+
 query = QueryType()
 query.set_field('getTags', resolve_tags)
 query.set_field('getPhotos', resolve_photos)
@@ -139,4 +140,3 @@ date_scalar.set_value_parser(parse_date_value)
 
 user_union = UnionType('UserUnion', resolve_user_type)
 base_order_union = UnionType('BaseOrderUnion', resolve_order_type)
-

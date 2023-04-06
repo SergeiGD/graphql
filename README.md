@@ -24,6 +24,10 @@ EMAIL_PASSWORD=mdskmfkmerw32kklas
 ```
 docker-compose up --build
 ```
+3) Для создания суперпользователя, после запуска контейнеров выполните скрипт [create_superuser.sh](./create_superuser.sh), который первым аргументом принимает адрес эл. почты, а вторым пароль. Пример:
+```
+./create_superuser.sh admin@gmail.com password123
+```
 
 Приложение будет достпуно по адресу http://127.0.0.1:5000/graphql
 

@@ -1,7 +1,6 @@
 from ..models.base import db
 from ..models.groups import Group
 from ..models.users import Worker
-from sqlalchemy import inspect
 import bcrypt
 
 
@@ -14,6 +13,19 @@ class WorkersManager:
     @staticmethod
     def delete_worker(worker: Worker):
         db.session.delete(worker)
+        db.session.commit()
+
+    @staticmethod
+    def create_superuser(email: str, password: str):
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        super_user = Worker(
+            email=email,
+            password=hashed_password.decode('utf8'),
+            is_superuser=True,
+            salary=0,
+            is_confirmed=True,
+        )
+        db.session.add(super_user)
         db.session.commit()
 
     @staticmethod

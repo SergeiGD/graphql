@@ -10,10 +10,14 @@ from modules.graphql.types import (
     category, group, order, purchase, worker,
 )
 from modules.settings import settings
+import click
+from modules.managers.workers_manager import WorkersManager
+
 
 # TODO: миграции БД
 # TODO: dataclasses
 # TODO: типизацию
+
 
 type_defs = load_schema_from_path('./modules/graphql/schema ')
 checked_types = gql(type_defs)
@@ -28,6 +32,11 @@ schema = make_executable_schema(
 explorer_html = ExplorerGraphiQL().html(None)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = settings.SECRET_KEY
+db_name = environ.get('DB_NAME', 'db_graphql')
+db_user = environ.get('DB_USER', 'db_user')
+db_password = environ.get('DB_PASSWORD', 'db_password')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql+psycopg2://{db_user}:{db_password}@db/{db_name}'
+db.init_app(app)
 
 
 @app.route('/graphql', methods=['GET'])
@@ -57,14 +66,16 @@ def graphql_server():
     return jsonify(result), status_code
 
 
+@app.cli.command('create-superuser')
+@click.argument('email')
+@click.argument('password')
+def create_superuser(email, password):
+    if not email or not password:
+        raise ValueError('Необходимо указать email (первый аргумент) и пароль (второй аргумент)')
+    WorkersManager.create_superuser(email, password)
+
+
 if __name__ == '__main__':
-    db_name = environ.get('DB_NAME', 'db_graphql')
-    db_user = environ.get('DB_USER', 'db_user')
-    db_password = environ.get('DB_PASSWORD', 'db_password')
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql+psycopg2://{db_user}:{db_password}@db/{db_name}'
-    db.init_app(app)
     with app.app_context():
         db.create_all()
     app.run(debug=True, host='0.0.0.0')
-
-

@@ -19,6 +19,7 @@
 
 ## Документация
 Документация postman доступна по следующей ссылке: https://documenter.getpostman.com/view/25226558/2s93XsXRDG#intro
+
 Со всех схемой graphQL можно ознакомиться в этом файле: [sdl.gql](./sdl.gql)
 
 ## Инструкция по запуску:

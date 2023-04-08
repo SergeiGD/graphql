@@ -38,6 +38,21 @@ def resolve_update_client(*_, id: int, input: dict, current_user):
 
 
 @token_required
+@permission_required(permissions=['delete_client'])
+def resolve_delete_client(*_, id: int, current_user):
+    client: Client = db.session.query(Client).filter(
+        Client.id == id,
+        Client.date_deleted == None,
+    ).first()
+    if client is None:
+        return return_not_found_error(Client.REPR_MODEL_NAME)
+    ClientsManager.delete_client(client)
+    return {'status': {
+        'success': True,
+    }}
+
+
+@token_required
 @permission_required(permissions=['show_client'])
 def resolve_clients(*_, client_id: Optional[int] = None, current_user):
     if client_id:
@@ -47,5 +62,13 @@ def resolve_clients(*_, client_id: Optional[int] = None, current_user):
         }}
     clients = db.session.query(Client).filter_by(date_deleted=None).all()
     return {'clients': clients, 'status': {
+        'success': True,
+    }}
+
+
+@token_required
+@permission_required(permissions=['show_order'])
+def resolve_client_orders(obj: Client, *_, current_user):
+    return {'orders': obj.orders, 'status': {
         'success': True,
     }}

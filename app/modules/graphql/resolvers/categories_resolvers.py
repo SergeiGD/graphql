@@ -136,7 +136,7 @@ def resolve_add_sale_to_category(*_, sale_id: int, category_id: int, current_use
     if category is None:
         return return_not_found_error(Category.REPR_MODEL_NAME)
     CategoriesManager.add_sale_to_category(category, sale)
-    return {'tag': tag, 'category': category, 'status': {
+    return {'sale': sale, 'category': category, 'status': {
         'success': True,
     }}
 

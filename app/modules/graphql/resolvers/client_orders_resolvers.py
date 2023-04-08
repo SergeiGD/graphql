@@ -21,7 +21,7 @@ def resolve_cancel_client_order(*_, id: int, current_user):
 
 
 @token_required
-def resolve_client_orders(*_, order_id: Optional[int] = None, current_user):
+def resolve_client_profile_orders(*_, order_id: Optional[int] = None, current_user):
     if order_id:
         order = db.session.query(Order).filter_by(id=order_id, client_id=current_user.id)
         return {'orders': order, 'status': {
@@ -34,14 +34,14 @@ def resolve_client_orders(*_, order_id: Optional[int] = None, current_user):
 
 
 @token_required
-def resolve_client_pay_order(*_, order_id: int, current_user):
+def resolve_client_pay_order(*_, id: int, current_user):
     order = db.session.query(Order).filter(
-        Order.id == order_id,
+        Order.id == id,
         Order.client_id == current_user.id,
         Order.date_canceled == None,
         Order.date_finished == None,
         Order.date_full_paid == None,
-    )
+    ).first()
     if order is None:
         return {'status': {
             'success': False,
@@ -53,3 +53,8 @@ def resolve_client_pay_order(*_, order_id: int, current_user):
     }}
 
 
+@token_required
+def resolve_profile_info(*_, current_user):
+    return {'user': current_user, 'status': {
+        'success': True,
+    }}

@@ -39,6 +39,21 @@ def resolve_update_worker(*_, id: int, input: dict, current_user):
 
 
 @token_required
+@permission_required(permissions=['delete_worker'])
+def resolve_delete_worker(*_, id: int, current_user):
+    worker: Worker = db.session.query(Worker).filter(
+        Worker.id == id,
+        Worker.date_deleted == None,
+    ).first()
+    if worker is None:
+        return return_not_found_error(Worker.REPR_MODEL_NAME)
+    WorkersManager.delete_worker(worker)
+    return {'status': {
+        'success': True,
+    }}
+
+
+@token_required
 @permission_required(permissions=['show_worker'])
 def resolve_workers(*_, worker_id: Optional[int] = None, current_user):
     if worker_id:

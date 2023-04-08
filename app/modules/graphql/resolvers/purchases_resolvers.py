@@ -10,7 +10,10 @@ from ..utils import return_validation_error, return_not_found_error, update_fiel
 @token_required
 @permission_required(permissions=['add_purchase'])
 def resolve_create_purchase(*_, input: dict, current_user):
-    category: Category = db.session.query(Category).get(input['category_id'])
+    category: Category = db.session.query(Category).filter(
+        Category.id == input['category_id'],
+        Category.date_deleted == None,
+    ).first()
     if category is None:
         return return_not_found_error(Category.REPR_MODEL_NAME)
     try:
@@ -93,7 +96,10 @@ def resolve_create_cart_purchase(*_, cart_uuid: str, input: dict):
     cart = db.session.query(Cart).filter_by(cart_uuid=cart_uuid).first()
     if cart is None:
         return return_not_found_error(Cart.REPR_MODEL_NAME)
-    category: Category = db.session.query(Category).get(input['category_id'])
+    category: Category = db.session.query(Category).filter(
+        Category.id == input['category_id'],
+        Category.date_deleted == None,
+    ).first()
     if category is None:
         return return_not_found_error(Category.REPR_MODEL_NAME)
     try:

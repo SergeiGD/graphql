@@ -2,6 +2,8 @@ from ..models.base import db
 from ..models.groups import Group
 from ..models.users import Worker
 import bcrypt
+from datetime import datetime
+from ..settings import settings
 
 
 class WorkersManager:
@@ -12,7 +14,8 @@ class WorkersManager:
 
     @staticmethod
     def delete_worker(worker: Worker):
-        db.session.delete(worker)
+        db.session.add(worker)
+        worker.date_deleted = datetime.now(tz=settings.TIMEZONE)
         db.session.commit()
 
     @staticmethod
@@ -36,7 +39,7 @@ class WorkersManager:
 
     @staticmethod
     def remove_group_from_worker(worker: Worker, group: Group):
-        db.session.commit(worker)
+        db.session.add(worker)
         worker.groups.remove(group)
         db.session.commit()
 

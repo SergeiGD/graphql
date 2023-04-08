@@ -7,7 +7,7 @@ from flask import Flask, jsonify, request
 from modules.models.base import db
 from modules.graphql.types import (
     mutation, query, datetime_scalar, date_scalar, user_union, base_order_union,
-    category, group, order, purchase, worker,
+    category, group, order, purchase, worker, client
 )
 from modules.settings import settings
 import click
@@ -15,6 +15,8 @@ from modules.managers.workers_manager import WorkersManager
 
 
 # TODO: миграции БД
+# TODO: поиск везде
+# TODO: измение личной информации
 # TODO: dataclasses
 # TODO: типизацию
 
@@ -25,7 +27,7 @@ schema = make_executable_schema(
     checked_types,
     [
         query, mutation, category, date_scalar, datetime_scalar, upload_scalar,
-        group, order, purchase, worker, user_union, base_order_union,
+        group, order, purchase, worker, client, user_union, base_order_union,
      ],
     convert_names_case=True
 )

@@ -34,6 +34,7 @@ type Category {
     rooms: [Room]!
     familiar: [Category]!
     sales: [Sale]!
+    photos: [Photo]!
     bookedDates(dateStart: Date!, dateEnd: Date!): BookedDatesResult!
 }
 
@@ -43,6 +44,7 @@ type Client {
     lastName: String
     email: String!
     dateOfBirth: Date
+    orders: OrdersResult!
 }
 
 type User {

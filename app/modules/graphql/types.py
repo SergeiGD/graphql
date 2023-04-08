@@ -7,7 +7,9 @@ from .resolvers.tags_resolvers import resolve_create_tag, resolve_update_tag, re
 from .resolvers.photos_resolvers import resolve_create_photo, resolve_update_photo, resolve_delete_photo, resolve_photos
 from .resolvers.rooms_resolvers import resolve_create_room, resolve_update_room, resolve_delete_room, resolve_rooms
 from .resolvers.sales_resolvers import resolve_create_sale, resolve_update_sale, resolve_delete_sale, resolve_sales
-from .resolvers.clients_resolvers import resolve_create_client, resolve_update_client, resolve_clients
+from .resolvers.clients_resolvers import (
+    resolve_create_client, resolve_update_client, resolve_delete_client, resolve_clients, resolve_client_orders
+)
 from .resolvers.orders_resolvers import (
     resolve_create_order, resolve_update_order, resolve_cancel_order, resolve_orders,
     resolve_order_client, resolve_order_purchases
@@ -25,7 +27,7 @@ from .resolvers.categories_resolvers import (
     resolve_category_familiar, resolve_category_busy_dates
 )
 from .resolvers.workers_resolvers import (
-    resolve_create_worker, resolve_update_worker, resolve_workers,
+    resolve_create_worker, resolve_update_worker, resolve_delete_worker, resolve_workers,
     resolve_add_group_to_worker, resolve_remove_group_from_worker, resolve_worker_groups
 )
 from .resolvers.groups_resolvers import (
@@ -38,7 +40,7 @@ from .resolvers.auth_resolvers import (
 )
 from .resolvers.carts_resolvers import resolve_create_cart, resolve_cart, resolve_confirm_cart
 from .resolvers.client_orders_resolvers import (
-    resolve_cancel_client_order, resolve_client_orders, resolve_client_pay_order
+    resolve_cancel_client_order, resolve_client_profile_orders, resolve_client_pay_order, resolve_profile_info
 )
 
 
@@ -55,7 +57,8 @@ query.set_field('getWorkers', resolve_workers)
 query.set_field('getGroups', resolve_groups)
 query.set_field('getPermissions', resolve_permissions)
 query.set_field('getCart', resolve_cart)
-query.set_field('getClientOrders', resolve_client_orders)
+query.set_field('getClientOrders', resolve_client_profile_orders)
+query.set_field('getProfileInfo', resolve_profile_info)
 
 mutation = MutationType()
 mutation.set_field('createTag', resolve_create_tag)
@@ -81,8 +84,10 @@ mutation.set_field('updateCategory', resolve_update_category)
 mutation.set_field('deleteCategory', resolve_delete_category)
 mutation.set_field('createClient', resolve_create_client)
 mutation.set_field('updateClient', resolve_update_client)
+mutation.set_field('deleteClient', resolve_delete_client)
 mutation.set_field('createWorker', resolve_create_worker)
 mutation.set_field('updateWorker', resolve_update_worker)
+mutation.set_field('deleteWorker', resolve_delete_worker)
 mutation.set_field('createOrder', resolve_create_order)
 mutation.set_field('updateOrder', resolve_update_order)
 mutation.set_field('cancelOrder', resolve_cancel_order)
@@ -128,6 +133,9 @@ purchase.set_field('order', resolve_purchase_order)
 
 worker = ObjectType('Worker')
 worker.set_field('groups', resolve_worker_groups)
+
+client = ObjectType('Client')
+client.set_field('orders', resolve_client_orders)
 
 datetime_scalar = ScalarType('Datetime')
 datetime_scalar.set_serializer(serialize_datetime)

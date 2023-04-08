@@ -1,11 +1,7 @@
 from datetime import datetime
 from ..models.base import db
-from ..models.users import Client, User
-from ..models.tokens import Token, TokenType
+from ..models.users import Client
 from ..settings import settings
-from ..utils.email_sender import send_email
-import uuid
-import bcrypt
 
 
 class ClientsManager:

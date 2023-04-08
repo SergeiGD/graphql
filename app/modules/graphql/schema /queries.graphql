@@ -12,4 +12,5 @@ type Query {
     getPermissions(permissionId: Int): PermissionsResult!
     getCart(cartUuid: String!): CartResult!
     getClientOrders(orderId: Int): ClientOrdersResult!
+    getProfileInfo: UserResult!
 }

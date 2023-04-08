@@ -22,7 +22,7 @@ class GroupsManager:
 
     @staticmethod
     def remove_permission_from_group(group: Group, permission: Permission):
-        db.session.commit(group)
+        db.session.add(group)
         group.permissions.remove(permission)
         db.session.commit()
         

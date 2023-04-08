@@ -82,6 +82,7 @@ type Mutation {
     ): WorkerResult!
 
     updateGroup(
+        id: Int!
         input: UpdateGroupInput!
     ): GroupResult!
 
@@ -116,6 +117,14 @@ type Mutation {
     ): DeleteResult!
 
     deleteSale(
+        id: Int!
+    ): DeleteResult!
+
+    deleteWorker(
+        id: Int!
+    ): DeleteResult!
+
+    deleteClient(
         id: Int!
     ): DeleteResult!
 

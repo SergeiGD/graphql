@@ -5,8 +5,8 @@ import sys
 import os
 
 TIMEZONE = timezone('Asia/Irkutsk')
-EMAIL_USER = environ.get('EMAIL_USER', 'mypetauth@ya.ru')
-EMAIL_PASSWORD = environ.get('EMAIL_PASSWORD', 'rnjgstghlhmjbuid')
+EMAIL_USER = environ.get('EMAIL_USER')
+EMAIL_PASSWORD = environ.get('EMAIL_PASSWORD')
 EMAIL_HOST = environ.get('EMAIL_HOST')
 SITE_URL = environ.get('SITE_URL', 'http://localhost:5000')
 SECRET_KEY = environ.get('SECRET_KEY', 'my_very_secret_key')

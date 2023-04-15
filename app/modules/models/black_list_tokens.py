@@ -1,10 +1,10 @@
 from datetime import datetime
-from .base import db
+from .base import Base
 from sqlalchemy.orm import Mapped, mapped_column
 from ..settings import settings
 
 
-class BlackListJWT(db.Model):
+class BlackListJWT(Base):
     __tablename__ = 'black_list_jwt'
     REPR_MODEL_NAME = 'использованный токен'
 

@@ -3,20 +3,20 @@ from ..settings import settings
 from sqlalchemy.orm import Mapped, relationship, mapped_column, validates
 from sqlalchemy import Index
 from typing import List, Optional
-from .base import db
+from .base import Base
 from sqlalchemy import Column, Table, ForeignKey, event
 import modules.models.categories as categories
 
 
 category_sale = Table(
     'category_sale',
-    db.metadata,
+    Base.metadata,
     Column('sale_id', ForeignKey('sale.id'), primary_key=True),
     Column('category_id', ForeignKey('category.id'), primary_key=True),
 )
 
 
-class Sale(db.Model):
+class Sale(Base):
     __tablename__ = 'sale'
     __table_args__ = (Index('dates_index', 'start_date', 'end_date'), )
     REPR_MODEL_NAME = 'скидка'

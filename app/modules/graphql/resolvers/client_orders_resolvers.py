@@ -1,56 +1,58 @@
 from typing import Optional
 from ...models.orders import Order
-from ...models.base import db
-from ...managers.orders_manager import OrdersManager
-from ..utils import return_validation_error, return_not_found_error, update_fields, token_required, permission_required
+from ...db_gateways.orders_gateway import OrdersGateway
+from ...db_gateways.clients_gateway import ClientsGateway
+from ..utils import return_not_found_error, token_required
+from ...session.session import get_session
 
 
 @token_required
 def resolve_cancel_client_order(*_, id: int, current_user):
-    order: Order = db.session.query(Order).filter(
-        Order.id == id,
-        Order.date_canceled == None,
-        Order.client_id == current_user.id,
-    ).first()
-    if order is None:
-        return return_not_found_error(Order.REPR_MODEL_NAME)
-    OrdersManager.mark_as_canceled(order)
-    return {'order': order, 'status': {
-        'success': True,
-    }}
+    with get_session() as db:
+        order: Order = db.query(Order).filter(
+            Order.id == id,
+            Order.date_canceled == None,
+            Order.client_id == current_user.id,
+        ).first()
+        if order is None:
+            return return_not_found_error(Order.REPR_MODEL_NAME)
+        OrdersGateway.mark_as_canceled(order, db)
+        return {'order': order, 'status': {
+            'success': True,
+        }}
 
 
 @token_required
 def resolve_client_profile_orders(*_, order_id: Optional[int] = None, current_user):
-    if order_id:
-        order = db.session.query(Order).filter_by(id=order_id, client_id=current_user.id)
-        return {'orders': order, 'status': {
+    with get_session() as db:
+        if order_id:
+            return {'orders': [ClientsGateway.get_client_order_by_id(current_user, order_id, db)], 'status': {
+                'success': True,
+            }}
+        return {'orders': ClientsGateway.get_all_client_orders(current_user, db), 'status': {
             'success': True,
         }}
-    orders = db.session.query(Order).filter_by(client_id=current_user.id)
-    return {'orders': orders, 'status': {
-        'success': True,
-    }}
 
 
 @token_required
 def resolve_client_pay_order(*_, id: int, current_user):
-    order = db.session.query(Order).filter(
-        Order.id == id,
-        Order.client_id == current_user.id,
-        Order.date_canceled == None,
-        Order.date_finished == None,
-        Order.date_full_paid == None,
-    ).first()
-    if order is None:
-        return {'status': {
-            'success': False,
-            'error': ' Не найден активный неоплаченный заказ с таким id'
+    with get_session() as db:
+        order = db.query(Order).filter(
+            Order.id == id,
+            Order.client_id == current_user.id,
+            Order.date_canceled == None,
+            Order.date_finished == None,
+            Order.date_full_paid == None,
+        ).first()
+        if order is None:
+            return {'status': {
+                'success': False,
+                'error': ' Не найден активный неоплаченный заказ с таким id'
+            }}
+        OrdersGateway.mark_as_paid(order, db)
+        return {'order': order, 'status': {
+            'success': True,
         }}
-    OrdersManager.mark_as_paid(order)
-    return {'order': order, 'status': {
-        'success': True,
-    }}
 
 
 @token_required

@@ -1,10 +1,11 @@
-from .base import db
+from .base import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, select
 import modules.models.categories as categories
+from ..session.session import get_session
 
 
-class Photo(db.Model):
+class Photo(Base):
     __tablename__ = 'photo'
     REPR_MODEL_NAME = 'фото'
 
@@ -24,15 +25,16 @@ class Photo(db.Model):
 
     @validates('category_id')
     def validate_category_id(self, key, category_id):
-        if not db.session.query(
-                categories.Category.query.filter(
-                    categories.Category.id == category_id,
-                    categories.Category.date_deleted == None,
-                ).exists()
-        ).scalar():
-            raise ValueError('Не найдена категория с таким id')
+        with get_session() as db:
+            if not db.query(
+                    select(categories.Category).where(
+                        categories.Category.id == category_id,
+                        categories.Category.date_deleted == None,
+                    ).exists(),
+            ).scalar():
+                raise ValueError('Не найдена категория с таким id')
 
-        return category_id
+            return category_id
 
 
 # @event.listens_for(Photo, 'before_insert')

@@ -14,7 +14,7 @@
 - python 3.10
 - ariadne 0.18
 - SQLAlchemy 2.0
-- Flask 2.2
+- uvicorn
 - PostgreSQL
 
 ## Документация

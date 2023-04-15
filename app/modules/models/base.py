@@ -1,3 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import DeclarativeBase
 
-db = SQLAlchemy(session_options={"autoflush": False})
+
+class Base(DeclarativeBase):
+    pass

@@ -1,18 +1,17 @@
 from _decimal import Decimal
 from datetime import datetime
-
 from sqlalchemy import or_
 from ..models.orders import Purchase, Order
-from ..models.base import db
 from ..settings import settings
+from sqlalchemy.orm import Session
 
 
-class OrdersManager:
+class OrdersGateway:
     """
     Класс для управления заказами
     """
     @staticmethod
-    def update_payment(order: Order):
+    def __update_payment(order: Order, db: Session):
         """
         Обновление статуса оплаты
         :param order: заказ, который необходимо обновить
@@ -25,7 +24,7 @@ class OrdersManager:
 
         if order.paid >= order.price and order.paid > 0:
             # если полностью оплачен
-            db.session.query(Purchase).filter(
+            db.query(Purchase).filter(
                 Purchase.order_id == order.id,
                 Purchase.is_canceled == False,
                 Purchase.is_paid == False,
@@ -36,7 +35,7 @@ class OrdersManager:
 
         if order.paid >= order.prepayment and order.paid > 0:
             # если оплачена предоплата
-            db.session.query(Purchase).filter(
+            db.query(Purchase).filter(
                 Purchase.order_id == order.id,
                 Purchase.is_canceled == False,
                 Purchase.is_prepayment_paid == False,
@@ -47,7 +46,7 @@ class OrdersManager:
 
         if order.paid < order.prepayment:
             # если не оплачено вообще
-            db.session.query(Purchase).filter(
+            db.query(Purchase).filter(
                 Purchase.order_id == order.id,
                 Purchase.is_canceled == False,
                 Purchase.is_prepayment_paid == True,
@@ -58,7 +57,7 @@ class OrdersManager:
 
         if order.paid < order.price:
             # если не оплачена предоплата
-            db.session.query(Purchase).filter(
+            db.query(Purchase).filter(
                 Purchase.order_id == order.id,
                 Purchase.is_canceled == False,
                 Purchase.is_paid == True,
@@ -66,41 +65,53 @@ class OrdersManager:
             order.date_full_paid = None
             return
 
-    @staticmethod
-    def save_order(order: Order):
-        db.session.add(order)
+    @classmethod
+    def save_order(cls, order: Order, db: Session):
+        db.add(order)
         if order.id is not None:
-            OrdersManager.update_payment(order)
-        db.session.commit()
+            cls.__update_payment(order, db)
+        db.commit()
 
     @staticmethod
-    def mark_as_canceled(order: Order):
+    def mark_as_canceled(order: Order, db: Session):
         """
         Отметить заказ как отмененный
         :param order: заказ, который нужно отменить
+        :param db: сессия БД
         :return:
         """
-        db.session.add(order)
+        db.add(order)
         # устанавливаем дату отмены
         order.date_canceled = datetime.now(tz=settings.TIMEZONE)
         order.date_finished = None
         # отменяем оплаченные покупки
-        db.session.query(Purchase).filter(
+        db.query(Purchase).filter(
             Purchase.order_id == order.id,
             Purchase.is_canceled == False,
             or_(Purchase.is_paid == True, Purchase.is_prepayment_paid == True),
         ).update({'is_canceled': True})
         # удаляем не оплаченные покупки
-        db.session.query(Purchase).filter(
+        db.query(Purchase).filter(
             Purchase.order_id == order.id,
             Purchase.is_canceled == False,
             Purchase.is_paid == False,
             Purchase.is_prepayment_paid == False,
         ).delete()
-        db.session.commit()
+        db.commit()
 
     @staticmethod
-    def mark_as_paid(order: Order):
+    def mark_as_paid(order: Order, db: Session):
         order.paid = order.price
-        OrdersManager.save_order(order)
+        OrdersGateway.save_order(order, db)
+
+    @staticmethod
+    def get_all(db: Session):
+        return db.query(Order).all()
+
+    @staticmethod
+    def get_by_id(order_id: int, db: Session):
+        return db.query(Order).filter_by(id=order_id).first()
+
+
+
 

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timedelta
 import enum
-from .base import db
+from .base import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 from sqlalchemy import ForeignKey
 from sqlalchemy.types import Enum, UUID
@@ -14,7 +14,7 @@ class TokenType(enum.Enum):
     reset = 2
 
 
-class Token(db.Model):
+class Token(Base):
     __tablename__ = 'token'
     REPR_MODEL_NAME = 'токен'
 

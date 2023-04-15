@@ -1,63 +1,62 @@
 from typing import Optional
 from ...models.photos import Photo
-from ...models.base import db
-from ...managers.photos_manager import PhotosManager
+from ...db_gateways.photos_gateway import PhotosGateway
 from ..utils import return_validation_error, return_not_found_error, update_fields, token_required, permission_required
 from werkzeug.datastructures import FileStorage
+from ...session.session import get_session
+from starlette.datastructures import UploadFile
 
 
 @token_required
 @permission_required(permissions=['add_photo'])
-def resolve_create_photo(*_, input: dict, file: FileStorage, current_user):
-    try:
-        photo = Photo(**input)
-        PhotosManager.save_photo(photo, file)
-    except ValueError as validation_error:
-        return return_validation_error(validation_error)
-    return {'photo': photo, 'status': {
-        'success': True,
-    }}
+def resolve_create_photo(*_, input: dict, file: UploadFile, current_user):
+    with get_session() as db:
+        try:
+            photo = Photo(**input)
+            PhotosGateway.save_photo(photo, db, file)
+        except ValueError as validation_error:
+            return return_validation_error(validation_error)
+        return {'photo': photo, 'status': {
+            'success': True,
+        }}
 
 
 @token_required
 @permission_required(permissions=['update_photo'])
 def resolve_update_photo(*_, id: int, input: dict, file: Optional[FileStorage] = None, current_user):
-    photo: Photo = db.session.query(Photo).filter(
-        Photo.id == id
-    ).first()
-    if photo is None:
-        return return_not_found_error(Photo.REPR_MODEL_NAME)
-    try:
-        update_fields(photo, input)
-        PhotosManager.save_photo(photo, file)
-    except ValueError as validation_error:
-        return return_validation_error(validation_error)
-    return {'photo': photo, 'status': {
-        'success': True,
-    }}
+    with get_session() as db:
+        photo: Photo = PhotosGateway.get_by_id(id, db)
+        if photo is None:
+            return return_not_found_error(Photo.REPR_MODEL_NAME)
+        try:
+            update_fields(photo, input)
+            PhotosGateway.save_photo(photo, db, file)
+        except ValueError as validation_error:
+            return return_validation_error(validation_error)
+        return {'photo': photo, 'status': {
+            'success': True,
+        }}
 
 
 @token_required
 @permission_required(permissions=['delete_photo'])
 def resolve_delete_photo(*_, id: int, current_user):
-    photo: Photo = db.session.query(Photo).filter(
-        Photo.id == id,
-    ).first()
-    if photo is None:
-        return return_not_found_error(Photo.REPR_MODEL_NAME)
-    PhotosManager.delete_photo(photo)
-    return {'status': {
-        'success': True,
-    }}
+    with get_session() as db:
+        photo: Photo = PhotosGateway.get_by_id(id, db)
+        if photo is None:
+            return return_not_found_error(Photo.REPR_MODEL_NAME)
+        PhotosGateway.delete_photo(photo, db)
+        return {'status': {
+            'success': True,
+        }}
 
 
 def resolve_photos(*_, photo_id: Optional[int] = None):
-    if photo_id:
-        photo = db.session.query(Photo).filter_by(id=photo_id)
-        return {'photos': photo, 'status': {
+    with get_session() as db:
+        if photo_id:
+            return {'photos': [PhotosGateway.get_by_id(photo_id, db)], 'status': {
+                'success': True,
+            }}
+        return {'photos': PhotosGateway.get_all(db), 'status': {
             'success': True,
         }}
-    photos = db.session.query(Photo).all()
-    return {'photos': photos, 'status': {
-        'success': True,
-    }}

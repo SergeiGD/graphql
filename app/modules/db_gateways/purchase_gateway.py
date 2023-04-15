@@ -6,25 +6,25 @@ from ..models.orders import Purchase
 from ..models.categories import Category
 from ..models.sales import Sale
 from ..models.rooms import Room
-from ..models.base import db
-from .categories_manager import CategoriesManager
-from .orders_manager import OrdersManager
+from .categories_gateway import CategoriesGateway
+from .orders_gateway import OrdersGateway
 from ..models.orders import Order
+from sqlalchemy.orm import Session
 
 
-class PurchasesManager:
+class PurchasesGateway:
     """
     Класс для управления покупками заказа
     """
     @staticmethod
-    def set_price(purchase: Purchase):
+    def __set_price(purchase: Purchase, db: Session):
         """
         Установка цен покупки
         :param purchase: покупка, которой нужно установить цены
         :return:
         """
         # берем категории комнаты, на которую оформлена покупка
-        category: Category = db.session.query(Room).get(purchase.room_id).category
+        category: Category = db.query(Room).get(purchase.room_id).category
         # считаем продолжительность покупки
         delta_seconds: Decimal = (purchase.end - purchase.start).total_seconds()
         SECONDS_IN_DAY: int = 86400
@@ -33,7 +33,7 @@ class PurchasesManager:
         # стандартная цена
         default_price: Decimal = category.price * days
         # ищем, есть ли активные скидки и если есть, то берем максимальную
-        sale = db.session.query(func.max(Sale.discount)).filter(
+        sale = db.query(func.max(Sale.discount)).filter(
             Sale.start_date <= datetime.now(),
             Sale.end_date >= datetime.now(),
             Sale.date_deleted == None,
@@ -54,7 +54,7 @@ class PurchasesManager:
         purchase.refund = purchase.price * refund_ratio
 
     @staticmethod
-    def set_room(purchase: Purchase, category: Category):
+    def __set_room(purchase: Purchase, category: Category, db: Session):
         """
         Установка комнаты покупки
         :param purchase: покупка, для которой нужно найти комнату
@@ -62,33 +62,42 @@ class PurchasesManager:
         :return:
         """
         # ищем свободную комнату выбранной категории на выбранные даты
-        room_id = CategoriesManager.pick_room(
+        room_id = CategoriesGateway.pick_room(
             category=category,
             start=purchase.start,
             end=purchase.end,
-            purchase_id=purchase.id
+            purchase_id=purchase.id,
+            db=db,
         )
         if room_id is None:
             raise ValueError('На эти даты нет свободных комнат этой категории')
 
         purchase.room_id = room_id
 
-    @staticmethod
-    def save_purchase(purchase: Purchase, category: Optional[Category] = None):
-        db.session.add(purchase)
+    @classmethod
+    def save_purchase(cls, purchase: Purchase, db: Session, category: Optional[Category] = None):
+        db.add(purchase)
         category = category if category is not None else purchase.room.category
+        cls.__set_room(purchase, category, db)
+        cls.__set_price(purchase, db)
+        db.commit()
 
-        PurchasesManager.set_room(purchase, category)
-        PurchasesManager.set_price(purchase)
-        db.session.commit()
         if isinstance(purchase.order, Order):
-            OrdersManager.save_order(purchase.order)
+            OrdersGateway.save_order(purchase.order, db)
 
     @staticmethod
-    def mark_as_canceled(purchase: Purchase):
-        db.session.add(purchase)
+    def mark_as_canceled(purchase: Purchase, db: Session):
+        db.add(purchase)
         if purchase.is_prepayment_paid or purchase.is_paid:
             purchase.is_canceled = True
         else:
-            db.session.delete(purchase)
-        db.session.commit()
+            db.delete(purchase)
+        db.commit()
+
+    @staticmethod
+    def get_all(db: Session):
+        return db.query(Purchase).all()
+
+    @staticmethod
+    def get_by_id(purchase_id: int, db: Session):
+        return db.query(Purchase).filter_by(id=purchase_id).first()

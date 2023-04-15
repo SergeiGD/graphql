@@ -1,33 +1,32 @@
 import math
 from datetime import datetime
 from typing import Optional
-
 from sqlalchemy import desc
-from ..models.base import db
 from ..models.sales import Sale
 from ..settings import settings
 from ..utils.file_manager import FileManager
-from werkzeug.datastructures import FileStorage
+from starlette.datastructures import UploadFile
+from sqlalchemy.orm import Session
 
 
-class SalesManager:
+class SalesGateway:
     @staticmethod
-    def save_sale(sale: Sale, file: Optional[FileStorage]):
-        db.session.add(sale)
+    def save_sale(sale: Sale, db: Session, file: Optional[UploadFile]):
+        db.add(sale)
         if file is not None:
             sale.image_path = FileManager.save_file(file, sale.image_path)
-        db.session.commit()
+        db.commit()
 
     @staticmethod
-    def delete_sale(sale: Sale):
-        db.session.add(sale)
+    def delete_sale(sale: Sale, db: Session):
+        db.add(sale)
         sale.date_deleted = datetime.now(tz=settings.TIMEZONE)
         FileManager.delete_file(sale.image_path)
-        db.session.commit()
+        db.commit()
 
     @staticmethod
-    def filter(filter: dict):
-        sales = db.session.query(Sale).filter_by(date_deleted=None)
+    def filter(filter: dict, db: Session):
+        sales = db.query(Sale).filter_by(date_deleted=None)
         if 'id' in filter:
             sales = sales.filter(
                 Sale.id == filter['id']
@@ -65,3 +64,11 @@ class SalesManager:
         offset = filter['page_size'] * (filter['page'] - 1)
         pages_count = math.ceil(sales.count() / filter['page_size'])
         return sales.offset(offset).limit(limit), pages_count
+
+    @staticmethod
+    def get_all(db: Session):
+        return db.query(Sale).filter(date_deleted=None)
+
+    @staticmethod
+    def get_by_id(sale_id: int, db: Session):
+        return db.query(Sale).filter_by(id=sale_id, date_deleted=None).first()

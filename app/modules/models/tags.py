@@ -1,21 +1,22 @@
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship, validates
-from sqlalchemy import Column, Table, ForeignKey
+from sqlalchemy import Column, Table, ForeignKey, select
 from typing import List
-from .base import db
+from .base import Base
 import modules.models.categories as categories
+from ..session.session import get_session
 
 
 category_tag = Table(
     'category_tag',
-    db.metadata,
+    Base.metadata,
     Column('tag_id', ForeignKey('tag.id'), primary_key=True),
     Column('category_id', ForeignKey('category.id'), primary_key=True),
 )
 
 
-class Tag(db.Model):
+class Tag(Base):
     __tablename__ = 'tag'
     REPR_MODEL_NAME = 'тег'
 
@@ -29,11 +30,12 @@ class Tag(db.Model):
 
     @validates('name')
     def validate_name(self, key, name):
-        if db.session.query(
-                db.session.query(Tag).filter(
-                    Tag.name == name
-                ).exists()
-        ).scalar():
-            raise ValueError('Уже есть тег с таким наименованием')
-        return name
+        with get_session() as db:
+            if db.query(
+                    db.query(Tag).filter(
+                        Tag.name == name
+                    ).exists()
+            ).scalar():
+                raise ValueError('Уже есть тег с таким наименованием')
+            return name
 

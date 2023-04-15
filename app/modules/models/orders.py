@@ -1,18 +1,19 @@
 from typing import Optional, List
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates, column_property
-from sqlalchemy import ForeignKey, func, select, event, case, and_, text
+from sqlalchemy import ForeignKey, func, select, event, case, and_, exists
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.types import DECIMAL, UUID
 from _decimal import Decimal
 from datetime import datetime, date
 from ..settings import settings
-from .base import db
+from .base import Base
+from ..session.session import get_session
 import uuid
 import modules.models.users as users
 import modules.models.rooms as rooms
 
 
-class Purchase(db.Model):
+class Purchase(Base):
     __tablename__ = 'purchase'
     REPR_MODEL_NAME = 'покупка'
 
@@ -34,20 +35,21 @@ class Purchase(db.Model):
 
     @validates('order_id')
     def validate_order_id(self, key, order_id):
-        if not db.session.query(
-                and_(
-                    BaseOrder.query.filter(
-                        BaseOrder.id == order_id
-                    ).exists(),
-                    Order.query.filter(
-                        Order.date_canceled == None,
-                        Order.date_finished == None,
-                    ).exists(),
-                )
-        ).scalar():
-            raise ValueError('Не найден активный заказ с таким id')
+        with get_session() as db:
+            if not db.query(
+                    and_(
+                        select(BaseOrder).where(
+                            BaseOrder.id == order_id,
+                        ).exists(),
+                        select(Order).where(
+                            Order.date_canceled == None,
+                            Order.date_finished == None,
+                        ).exists(),
+                    )
+            ).scalar():
+                raise ValueError('Не найден заказ с таким id')
 
-        return order_id
+            return order_id
 
 
 def validate_dates(mapper, connection, target: Purchase):
@@ -59,7 +61,7 @@ event.listen(Purchase, 'before_insert', validate_dates)
 event.listen(Purchase, 'before_update', validate_dates)
 
 
-class BaseOrder(db.Model):
+class BaseOrder(Base):
     __tablename__ = 'base_order'
     REPR_MODEL_NAME = 'заказ'
 
@@ -160,13 +162,14 @@ class Order(BaseOrder):
 
     @validates('category_id')
     def validate_client_id(self, key, client_id):
-        if not db.session.query(
-                users.User.query.filter(
-                    users.User.id == client_id,
-                    users.User.date_deleted == None,
-                ).exists()
-        ).scalar():
-            raise ValueError('Не найден клиент с таким id')
+        with get_session() as db:
+            if not db.query(
+                    select(users.User).where(
+                        users.User.id == client_id,
+                        users.User.date_deleted == None,
+                    ).exists(),
+            ).scalar():
+                raise ValueError('Не найден клиент с таким id')
 
         return client_id
 
@@ -176,7 +179,6 @@ class Cart(BaseOrder):
     REPR_MODEL_NAME = 'корзина'
 
     id: Mapped[int] = mapped_column(ForeignKey("base_order.id"), primary_key=True)
-    # cart_uuid: Mapped[str] = mapped_column(unique=True)  # uuid для получения корзины
     cart_uuid: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), default=uuid.uuid4, unique=True)  # uuid для получения корзины
 
     __mapper_args__ = {

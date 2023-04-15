@@ -4,14 +4,14 @@ from datetime import datetime
 from ..settings import settings
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 from sqlalchemy.types import DECIMAL
-from .base import db
+from .base import Base
 import modules.models.rooms as rooms
 import modules.models.tags as tags
 import modules.models.photos as photos
 import modules.models.sales as sales
 
 
-class Category(db.Model):
+class Category(Base):
     __tablename__ = 'category'
     REPR_MODEL_NAME = 'категория'
 

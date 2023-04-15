@@ -5,20 +5,21 @@ from ..settings import settings
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 from sqlalchemy import ForeignKey, Table, Column, event, UniqueConstraint
 from typing import Optional
-from .base import db
+from .base import Base
 import modules.models.orders as orders
 import modules.models.groups as groups
+from ..session.session import get_session
 
 
 user_group = Table(
     'user_group',
-    db.metadata,
+    Base.metadata,
     Column('user_id', ForeignKey('people.id'), primary_key=True),
     Column('group_id', ForeignKey('group.id'), primary_key=True),
 )
 
 
-class User(db.Model):
+class User(Base):
     __tablename__ = 'people'
     REPR_MODEL_NAME = 'пользователь'
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -78,13 +79,14 @@ class Worker(User):
 
 
 def validate_unq_email(mapper, connection, target: User):
-    if db.session.query(
-            db.session.query(User).filter(
-                User.email == target.email,
-                User.date_deleted == None,
-            ).exists()
-    ).scalar():
-        raise ValueError('Уже есть пользователь с таким адреос эл. почты')
+    with get_session() as db:
+        if db.query(
+                db.query(User).filter(
+                    User.email == target.email,
+                    User.date_deleted == None,
+                ).exists()
+        ).scalar():
+            raise ValueError('Уже есть пользователь с таким адреос эл. почты')
 
 
 event.listen(Client, 'before_insert', validate_unq_email)

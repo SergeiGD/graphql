@@ -1,14 +1,15 @@
 from datetime import datetime
 from typing import Optional
-from .base import db
+from .base import Base
 from ..settings import settings
 from sqlalchemy.orm import Mapped, validates, mapped_column, relationship
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, select
 import modules.models.categories as categories
 import modules.models.orders as orders
+from ..session.session import get_session
 
 
-class Room(db.Model):
+class Room(Base):
     __tablename__ = 'room'
     REPR_MODEL_NAME = 'комната'
 
@@ -24,31 +25,33 @@ class Room(db.Model):
 
     @validates('room_number')
     def validate_room_number(self, key, room_number):
-        if db.session.query(
-                Room.query.filter(
+        with get_session() as db:
+            if db.query(
+                select(Room).where(
                     Room.room_number == room_number,
                     Room.date_deleted == None,
                     Room.id != self.id
-                ).exists()
-        ).scalar():
-            raise ValueError('Уже существует комната с этим номером')
+                ).exists(),
+            ).scalar():
+                raise ValueError('Уже существует комната с этим номером')
 
-        if room_number <= 0:
-            raise ValueError('Номер комнаты не может быть меньше 1')
+            if room_number <= 0:
+                raise ValueError('Номер комнаты не может быть меньше 1')
 
-        return room_number
+            return room_number
 
     @validates('category_id')
     def validate_category_id(self, key, category_id):
-        if not db.session.query(
-                categories.Category.query.filter(
+        with get_session() as db:
+            if not db.query(
+                select(categories.Category).where(
                     categories.Category.id == category_id,
                     categories.Category.date_deleted == None,
-                ).exists()
-        ).scalar():
-            raise ValueError('Не найдена категория с таким id')
+                ).exists(),
+            ).scalar():
+                raise ValueError('Не найдена категория с таким id')
 
-        return category_id
+            return category_id
 
 
 # @event.listens_for(Room, 'before_insert')

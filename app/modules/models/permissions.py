@@ -1,10 +1,8 @@
-from .base import db
-from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
-from sqlalchemy import ForeignKey
-# import modules.models.users as user
+from .base import Base
+from sqlalchemy.orm import Mapped, mapped_column
 
 
-class Permission(db.Model):
+class Permission(Base):
     __tablename__ = 'permission'
     REPR_MODEL_NAME = 'разрешение'
 
@@ -12,6 +10,4 @@ class Permission(db.Model):
     name: Mapped[str] = mapped_column(unique=True)
     code: Mapped[str] = mapped_column(unique=True, index=True)
 
-    # category_id: Mapped[int] = mapped_column(ForeignKey('category.id'))
-    # category: Mapped['categories.Category'] = relationship(back_populates='photos')
 

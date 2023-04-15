@@ -6,29 +6,30 @@ from ..models.categories import Category
 from ..models.rooms import Room
 from ..models.tags import Tag, category_tag
 from ..models.sales import Sale
-from ..models.base import db
 from ..models.orders import Purchase
 from ..settings import settings
 from ..utils.file_manager import FileManager
-from werkzeug.datastructures import FileStorage
+from starlette.datastructures import UploadFile
+from sqlalchemy.orm import Session
 
 
-class CategoriesManager:
+class CategoriesGateway:
     """
     Класс для управления категориями
     """
     @staticmethod
-    def pick_room(category: Category, start: date, end: date, purchase_id: Optional[int] = None):
+    def pick_room(category: Category, start: date, end: date, db: Session, purchase_id: Optional[int] = None):
         """
         Поиск свободной комнаты категории
         :param category: категория, у которой нужно найти комнату
         :param start: дата начала брони
         :param end: дата конца брони
+        :param db: сессия БД
         :param purchase_id: id покупки, если нужно подобрать комнату для обновления покупки, а не создания новой
         :return: id комнаты, если нашлась подходящая, иначе None
         """
-        # комнат категории
-        rooms = db.session.query(Room).filter(
+        # комнаты категории
+        rooms = db.query(Room).filter(
             Room.date_deleted == None,
             Room.category_id == category.id,
         ).with_entities(Room.id).all()
@@ -39,7 +40,7 @@ class CategoriesManager:
 
         while free_rooms and day_to_check < end:
             # занятые комнаты на проверяемую дату
-            busy_rooms = db.session.query(Purchase).filter(
+            busy_rooms = db.query(Purchase).filter(
                 Purchase.room_id.in_(free_rooms),
                 Purchase.is_canceled == False,
                 Purchase.start <= day_to_check,
@@ -60,12 +61,13 @@ class CategoriesManager:
         return picked_room_id
 
     @staticmethod
-    def get_busy_dates(category: Category, date_start: date, date_end: date):
+    def get_busy_dates(category: Category, date_start: date, date_end: date, db: Session,):
         """
         Получение занятых дней комнат категории
         :param category: категория, комнаты которой нужно проверить
         :param date_start: дата начала проверки
         :param date_end: дата конца проверки
+        :param db: сессия БД
         :return:
         """
         if date_end < date.today():
@@ -78,7 +80,7 @@ class CategoriesManager:
         busy_dates = []
         while current_day <= date_end:
             # проверяем занят ли день и не прошедшая ли дата
-            if current_day < date.today() or CategoriesManager.is_day_busy(category, current_day):
+            if current_day < date.today() or CategoriesGateway.is_day_busy(category, current_day, db):
                 busy_dates.append(current_day)
             current_day += timedelta(days=1)
         # сортируем даты
@@ -86,16 +88,17 @@ class CategoriesManager:
         return busy_dates
 
     @staticmethod
-    def is_day_busy(category: Category, day: date):
+    def is_day_busy(category: Category, day: date, db: Session):
         """
         Проверка, забронированны ли все комнаты выбранной категории на этот день
         :param category: категория, комнаты которой нужно проверить
         :param day: дата, на которую будет осуществлена проверка
+        :param db: сессия БД
         :return:
         """
         #  если нету комнат, то возвращаем как занятно
-        if not db.session.query(
-                db.session.query(Room).filter(
+        if not db.query(
+                db.query(Room).filter(
                     Room.category_id == category.id,
                     Room.date_deleted == None,
                 ).exists()
@@ -103,15 +106,15 @@ class CategoriesManager:
             return True
 
         # получаем брони, которые есть на этот день
-        purchases = db.session.query(Purchase.room_id).filter(
+        purchases = db.query(Purchase.room_id).filter(
             Purchase.start <= day,
             Purchase.end > day,
             Purchase.is_canceled == False
         ).subquery('purchases')
 
         # если есть хоть одна комната, на которую нету брони в этот день, то есть свободная
-        if db.session.query(
-                db.session.query(Room).filter(
+        if db.query(
+                db.query(Room).filter(
                     Room.category_id == category.id,
                     Room.date_deleted == None,
                     Room.id.not_in(
@@ -123,58 +126,52 @@ class CategoriesManager:
         return True
 
     @staticmethod
-    def get_familiar(category: Category):
+    def get_familiar(category: Category, db: Session):
         """
         Получение похожих категория (с похожими тегами)
         :param category:  категория, для которой нужно найти похожие категории
+        :param db: сессия БД
         :return: список похожих категорий
         """
-
         # Получаем id тегов переданной категории
-        tags = db.session.query(
-            category_tag.c.tag_id
-        ).filter(
+        tags = db.query(category_tag.c.tag_id).filter(
             category_tag.c.tag_id.in_(
-                db.session.query(category_tag.c.tag_id).filter(
+                db.query(category_tag.c.tag_id).filter(
                     category_tag.c.category_id == category.id
                 )
             )
         )
 
         #  Получаем id категорий, у которых есть такие эе теги, как у переданной category
-        cats = db.session.query(
-            category_tag.c.category_id
-        ).filter(
+        cats = db.query(category_tag.c.category_id).filter(
             category_tag.c.tag_id.in_(tags),
             category_tag.c.category_id != category.id
         )
 
         # получаем id 3-х категорий, у которых больше всего совпадений по тегам
-        familiar_ids = db.session.query(
+        familiar_ids = db.query(
             category_tag.c.category_id.label('cat'),
             func.count(category_tag.c.tag_id).label('count'),
         ).filter(
             category_tag.c.category_id.in_(cats),
             category_tag.c.tag_id.in_(tags),
-        ).group_by(text('cat'))\
-            .order_by(desc('count'))\
-            .limit(3)\
-            .all()
+        ).group_by(text('cat')).order_by(desc('count')).limit(3).all()
 
         #  получаем сами объекты категорий из полученного кортежа (cat_id, count_tags)
-        familiar_items = db.session.query(Category).filter(
+        familiar_items = db.query(Category).filter(
             Category.id.in_([item[0] for item in familiar_ids])
         )
         return familiar_items
 
     @staticmethod
-    def filter(filter: dict):
+    def filter(filter: dict, db: Session):
         """
         Фильтрация категорий
         :param filter: параметры сортировки
+        :param db: сессия БД
         :return:
         """
-        categories = db.session.query(Category).filter_by(date_deleted=None)
+        categories = db.query(Category).filter_by(date_deleted=None)
         if not filter['show_hidden']:
             categories = categories.filter_by(is_hidden=False)
         if 'id' in filter:
@@ -233,7 +230,7 @@ class CategoriesManager:
                 raise ValueError('нельзя запросить больше 31 дня')
             busy_categories_ids = []
             for category in categories_to_check:
-                if CategoriesManager.get_busy_dates(category, date_from, date_until):
+                if CategoriesGateway.get_busy_dates(category, date_from, date_until):
                     busy_categories_ids.append(category.id)
             categories = categories.filter(
                 Category.id.not_in(busy_categories_ids)
@@ -253,39 +250,51 @@ class CategoriesManager:
         return categories.offset(offset).limit(limit), pages_count
 
     @staticmethod
-    def save_category(category: Category, file: Optional[FileStorage]):
-        db.session.add(category)
+    def save_category(category: Category, db: Session, file: Optional[UploadFile]):
+        db.add(category)
         if file is not None:
             category.main_photo_path = FileManager.save_file(file, category.main_photo_path)
-        db.session.commit()
+        db.commit()
 
     @staticmethod
-    def delete_category(category: Category):
-        db.session.add(category)
+    def delete_category(category: Category, db: Session):
+        db.add(category)
         category.date_deleted = datetime.now(tz=settings.TIMEZONE)
         FileManager.delete_file(category.main_photo_path)
-        db.session.commit()
+        for photo in category.photos:
+            FileManager.delete_file(photo.path)
+        db.commit()
 
     @staticmethod
-    def add_tag_to_category(category: Category, tag: Tag):
-        db.session.add(category)
+    def add_tag_to_category(category: Category, tag: Tag, db: Session):
+        db.add(category)
         category.tags.append(tag)
-        db.session.commit()
+        db.commit()
 
     @staticmethod
-    def remove_tag_from_category(category: Category, tag: Tag):
-        db.session.add(category)
-        category.tags.remove(tag)
-        db.session.commit()
+    def remove_tag_from_category(category: Category, tag: Tag, db: Session):
+        db.add(category)
+        if tag in category.tags:
+            category.tags.remove(tag)
+        db.commit()
 
     @staticmethod
-    def add_sale_to_category(category: Category, sale: Sale):
-        db.session.add(category)
+    def add_sale_to_category(category: Category, sale: Sale, db: Session):
+        db.add(category)
         category.sales.append(sale)
-        db.session.commit()
+        db.commit()
 
     @staticmethod
-    def remove_sale_to_category(category: Category, sale: Sale):
-        db.session.add(category)
-        category.sales.remove(sale)
-        db.session.commit()
+    def remove_sale_to_category(category: Category, sale: Sale, db: Session):
+        db.add(category)
+        if sale in category.sales:
+            category.sales.remove(sale)
+        db.commit()
+
+    @staticmethod
+    def get_all(db: Session):
+        return db.query(Category).filter(date_deleted=None)
+
+    @staticmethod
+    def get_by_id(category_id: int, db: Session):
+        return db.query(Category).filter_by(id=category_id, date_deleted=None).first()

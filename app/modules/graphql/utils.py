@@ -1,10 +1,11 @@
 from typing import Any, List
 from functools import wraps
-from flask import current_app
 import jwt
 from jwt.exceptions import DecodeError, ExpiredSignatureError
 from ..models.users import User
-from ..managers.users_manager import UsersManager
+from ..db_gateways.users_gateway import UsersGateway
+from ..settings import settings
+from ..session.session import get_session
 
 
 def return_validation_error(validation_error: Exception):
@@ -51,7 +52,7 @@ def token_required(f):
     @wraps(f)
     def decorated_token(*args, **kwargs):
         info = args[1]  # втором аргументом резольверу всегда приходит информация о запросе
-        request = info.context  # получаем реквест
+        request = info.context['request']  # получаем реквест
         auth_header = request.headers.get('Authorization', '')  # получаем значения в заголовке Authorization
         keys = auth_header.split()  # т.к. это будет строка вида Bearer token, приводим ее к списку для удобства
 
@@ -65,7 +66,7 @@ def token_required(f):
             # вторым элементов у нас лежит сам токен
             token = keys[1]
             # пытаемся декодировать токен
-            payload = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
         except (DecodeError, ExpiredSignatureError):
             return {'status': {
                 'success': False,
@@ -79,10 +80,9 @@ def token_required(f):
                 'error': f'Недействительный токен доступа',
             }}
 
-        # получаем пользователя из payload'а токена
-        current_user = User.query.filter_by(
-            id=payload['id']
-        ).first()
+        with get_session() as db:
+            # получаем пользователя из payload'а токена
+            current_user = UsersGateway.get_by_id(payload['id'], db)
         # пихаем полученного пользователя в аргументы резольвера
         kwargs['current_user'] = current_user
         return f(*args, **kwargs)
@@ -102,8 +102,9 @@ def permission_required(permissions: List[str]):
                     'error': f'Для доступа к этой секции необходимо быть авторизированным пользователем',
                 }}
 
-            if UsersManager.can_actions(user, permissions):
-                return f(*args, **kwargs)
+            with get_session() as db:
+                if UsersGateway.can_actions(user, permissions, db):
+                    return f(*args, **kwargs)
 
             return {'status': {
                 'success': False,

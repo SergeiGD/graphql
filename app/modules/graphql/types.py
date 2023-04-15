@@ -3,9 +3,13 @@ from .scalars.date_scalar import serialize_date, parse_date_value
 from .scalars.datetime_scalar import serialize_datetime, parse_datetime_value
 from .unions.users_union import resolve_user_type
 from .unions.orders_union import resolve_order_type
-from .resolvers.tags_resolvers import resolve_create_tag, resolve_update_tag, resolve_delete_tag, resolve_tags
+from .resolvers.tags_resolvers import (
+    resolve_create_tag, resolve_update_tag, resolve_delete_tag, resolve_tags,
+)
 from .resolvers.photos_resolvers import resolve_create_photo, resolve_update_photo, resolve_delete_photo, resolve_photos
-from .resolvers.rooms_resolvers import resolve_create_room, resolve_update_room, resolve_delete_room, resolve_rooms
+from .resolvers.rooms_resolvers import (
+    resolve_create_room, resolve_update_room, resolve_delete_room, resolve_rooms
+)
 from .resolvers.sales_resolvers import resolve_create_sale, resolve_update_sale, resolve_delete_sale, resolve_sales
 from .resolvers.clients_resolvers import (
     resolve_create_client, resolve_update_client, resolve_delete_client, resolve_clients, resolve_client_orders
@@ -144,7 +148,6 @@ datetime_scalar.set_value_parser(parse_datetime_value)
 date_scalar = ScalarType('Date')
 date_scalar.set_serializer(serialize_date)
 date_scalar.set_value_parser(parse_date_value)
-
 
 user_union = UnionType('UserUnion', resolve_user_type)
 base_order_union = UnionType('BaseOrderUnion', resolve_order_type)

@@ -1,19 +1,10 @@
-from modules.db_gateways.workers_gateway import WorkersGateway
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
-from os import environ
+from hotel_business.gateways.workers_gateway import WorkersGateway
 import sys
+from hotel_business.session.session import get_session
 
 
 if __name__ == '__main__':
-    db_name = environ.get('DB_NAME', 'db_graphql')
-    db_user = environ.get('DB_USER', 'db_user')
-    db_password = environ.get('DB_PASSWORD', 'db_password')
-    engine = create_engine(
-        f'postgresql+psycopg2://{db_user}:{db_password}@db/{db_name}'
-    )
-
-    with Session(engine) as session:
+    with get_session() as session:
         email = sys.argv[1]
         password = sys.argv[2]
         print(email, password)

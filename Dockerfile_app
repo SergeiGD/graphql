@@ -9,7 +9,6 @@ COPY ./requirements.txt .
 RUN pip install -r requirements.txt
 EXPOSE 5000
 
-RUN echo '1 1 1 * * python3 /app/clean_tokens_task.py' >> /etc/crontabs/root
 RUN echo '0 0 * * * python3 /app/clean_carts_task.py' >> /etc/crontabs/root
 RUN echo '0 0 * * * python3 /app/finish_orders_task.py' >> /etc/crontabs/root
 RUN echo '# END OF CRON JOBS' >> /etc/crontabs/root

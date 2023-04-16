@@ -2,23 +2,18 @@ from ariadne import gql, make_executable_schema, upload_scalar, load_schema_from
 from ariadne.explorer import ExplorerGraphiQL
 from ariadne.asgi.handlers import GraphQLHTTPHandler
 from ariadne.asgi import GraphQL
-from modules.session.session import engine
-from modules.graphql.types import (
+from hotel_business.session.session import engine
+from ariadne_graphql.types import (
     mutation, query, datetime_scalar, date_scalar, user_union, base_order_union,
     category, group, order, purchase, worker, client,
 )
 from sqlalchemy import inspect
-from modules.session.session import get_session
-from modules.models.base import Base
+from hotel_business.session.session import get_session
+from hotel_business.models.base import Base
 import uvicorn
 
 
-# TODO: миграции БД
-# TODO: поиск везде
-# TODO: измение личной информации
-
-
-type_defs = load_schema_from_path('./modules/graphql/schema ')
+type_defs = load_schema_from_path('ariadne_graphql/schema ')
 checked_types = gql(type_defs)
 schema = make_executable_schema(
     checked_types,
@@ -34,10 +29,10 @@ explorer_html = ExplorerGraphiQL().html(None)
 def session_middleware(resolver, obj, info, **args):
     # middleware для добавления объекта к сесси при вложенных запросах
     if isinstance(obj, Base) and inspect(obj).detached:
+        # если объект является моделью sqlalchemy и он не заатачен к сессии, то добалвяем его
         with get_session() as db:
             db.add(obj)
             value = resolver(obj, info, **args)
-            return value
     else:
         value = resolver(obj, info, **args)
     return value

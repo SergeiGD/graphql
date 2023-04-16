@@ -14,7 +14,7 @@
 
 Резольверы, схема graphql, юнионы и прочие сопутствующие graphql вещи хранятся в каталоге [ariadne_graphql](./app/ariadne_graphql).
 
-Основная бизнес-логика хранится в модуле [hotel_business_module](./app/hotel_business_module). В моделях сосредоточена только логика хранения данных (описание таблиц и валидаторы), взаимодействие c происходит по шаблону TableGateway, для всех основных моделей есть свой класс [gateway](./app/hotel_business_module/gateways), в котором хранится логика обработки данных и основные use-cases приложения. 
+Основная бизнес-логика хранится в модуле [hotel_business_module](https://github.com/SergeiGD/hotel_business_module). В моделях сосредоточена только логика хранения данных (описание таблиц и валидаторы), взаимодействие c происходит по шаблону TableGateway, для всех основных моделей есть свой класс [gateway](https://github.com/SergeiGD/hotel_business_module/tree/main/gateways), в котором хранится логика обработки данных и основные use-cases приложения. 
 
 **Использованые технологии:**
 - python 3.10

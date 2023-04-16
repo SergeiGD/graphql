@@ -1,12 +1,12 @@
 from typing import Optional
-from hotel_business.models.orders import Purchase
-from hotel_business.models.categories import Category
-from hotel_business.models.orders import Cart
-from hotel_business.gateways.purchase_gateway import PurchasesGateway
-from hotel_business.gateways.categories_gateway import CategoriesGateway
-from hotel_business.gateways.carts_gateway import CartsGateway
+from hotel_business_module.models.orders import Purchase
+from hotel_business_module.models.categories import Category
+from hotel_business_module.models.orders import Cart
+from hotel_business_module.gateways.purchase_gateway import PurchasesGateway
+from hotel_business_module.gateways.categories_gateway import CategoriesGateway
+from hotel_business_module.gateways.carts_gateway import CartsGateway
 from ..utils import return_validation_error, return_not_found_error, update_fields, permission_required, token_required
-from hotel_business.session.session import get_session
+from hotel_business_module.session.session import get_session
 
 
 @token_required

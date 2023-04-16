@@ -1,8 +1,8 @@
 from typing import Optional
-from hotel_business.models.orders import Order
-from hotel_business.gateways.orders_gateway import OrdersGateway
+from hotel_business_module.models.orders import Order
+from hotel_business_module.gateways.orders_gateway import OrdersGateway
 from ..utils import return_validation_error, return_not_found_error, update_fields, token_required, permission_required
-from hotel_business.session.session import get_session
+from hotel_business_module.session.session import get_session
 
 
 @token_required

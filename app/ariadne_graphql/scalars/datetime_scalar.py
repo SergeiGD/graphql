@@ -1,5 +1,5 @@
 from datetime import datetime
-from hotel_business.settings import settings
+from hotel_business_module.settings import settings
 
 
 def serialize_datetime(value: datetime):

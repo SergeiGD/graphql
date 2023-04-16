@@ -2,9 +2,9 @@ from typing import Any, List
 from functools import wraps
 import jwt
 from jwt.exceptions import DecodeError, ExpiredSignatureError
-from hotel_business.gateways.users_gateway import UsersGateway
-from hotel_business.settings import settings
-from hotel_business.session.session import get_session
+from hotel_business_module.gateways.users_gateway import UsersGateway
+from hotel_business_module.settings import settings
+from hotel_business_module.session.session import get_session
 
 
 def return_validation_error(validation_error: Exception):

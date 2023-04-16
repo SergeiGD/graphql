@@ -1,8 +1,8 @@
 from ..utils import return_validation_error
-from hotel_business.models.users import Client
-from hotel_business.models.tokens import TokenType
-from hotel_business.gateways.users_gateway import UsersGateway
-from hotel_business.session.session import get_session
+from hotel_business_module.models.users import Client
+from hotel_business_module.models.tokens import TokenType
+from hotel_business_module.gateways.users_gateway import UsersGateway
+from hotel_business_module.session.session import get_session
 
 
 def resolve_login(*_, login: str, password: str):

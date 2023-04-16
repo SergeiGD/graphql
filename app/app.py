@@ -2,14 +2,14 @@ from ariadne import gql, make_executable_schema, upload_scalar, load_schema_from
 from ariadne.explorer import ExplorerGraphiQL
 from ariadne.asgi.handlers import GraphQLHTTPHandler
 from ariadne.asgi import GraphQL
-from hotel_business.session.session import engine
+from hotel_business_module.session.session import engine
 from ariadne_graphql.types import (
     mutation, query, datetime_scalar, date_scalar, user_union, base_order_union,
     category, group, order, purchase, worker, client,
 )
 from sqlalchemy import inspect
-from hotel_business.session.session import get_session
-from hotel_business.models.base import Base
+from hotel_business_module.session.session import get_session
+from hotel_business_module.models.base import Base
 import uvicorn
 
 

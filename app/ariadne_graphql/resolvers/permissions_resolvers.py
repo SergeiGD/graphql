@@ -1,7 +1,7 @@
 from typing import Optional
-from hotel_business.gateways.permissions_gateway import PermissionsGateway
+from hotel_business_module.gateways.permissions_gateway import PermissionsGateway
 from ..utils import permission_required, token_required
-from hotel_business.session.session import get_session
+from hotel_business_module.session.session import get_session
 
 
 @token_required

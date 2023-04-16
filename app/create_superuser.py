@@ -1,6 +1,6 @@
-from hotel_business.gateways.workers_gateway import WorkersGateway
+from hotel_business_module.gateways.workers_gateway import WorkersGateway
 import sys
-from hotel_business.session.session import get_session
+from hotel_business_module.session.session import get_session
 
 
 if __name__ == '__main__':

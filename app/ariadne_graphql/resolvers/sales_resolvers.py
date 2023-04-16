@@ -1,8 +1,8 @@
 from typing import Optional
-from hotel_business.models.sales import Sale
-from hotel_business.gateways.sales_gateway import SalesGateway
+from hotel_business_module.models.sales import Sale
+from hotel_business_module.gateways.sales_gateway import SalesGateway
 from ..utils import return_validation_error, return_not_found_error, update_fields, token_required, permission_required
-from hotel_business.session.session import get_session
+from hotel_business_module.session.session import get_session
 from starlette.datastructures import UploadFile
 
 

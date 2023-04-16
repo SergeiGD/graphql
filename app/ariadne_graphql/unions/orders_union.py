@@ -1,4 +1,4 @@
-from hotel_business.models.orders import Order, Cart
+from hotel_business_module.models.orders import Order, Cart
 
 
 def resolve_order_type(obj, *_):

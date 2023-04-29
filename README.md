@@ -59,6 +59,6 @@ docker-compose up --build
 ./create_superuser.sh admin@gmail.com password123
 ```
 
-Приложение будет достпуно по адресу http://127.0.0.1:5000/graphql
+Приложение будет достпуно по адресу http://127.0.0.1:8000/graphql
 
 P.S. убедитесь, что у Вас открыт 5000 порт и не забудьте провести клонирование вместе с подмодулями (флаг --recurse-submodules)

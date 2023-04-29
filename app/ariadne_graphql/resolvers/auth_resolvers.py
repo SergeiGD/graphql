@@ -3,6 +3,8 @@ from hotel_business_module.models.users import Client
 from hotel_business_module.models.tokens import TokenType
 from hotel_business_module.gateways.users_gateway import UsersGateway
 from hotel_business_module.session.session import get_session
+from hotel_business_module.settings import settings
+from hotel_business_module.utils.email_sender import send_email
 
 
 def resolve_login(*_, login: str, password: str):
@@ -31,6 +33,16 @@ def resolve_sing_up(*_, input: dict):
             user, token = UsersGateway.register_user(Client(**input), db)
         except ValueError as validation_error:
             return return_validation_error(validation_error)
+
+        # создаем ссылку с токеном, которую отправим юзеру
+        confirm_link = f'{settings.SITE_URL}/confirm_registration/{token}'
+        # отправляем письмо
+        send_email(
+            subject='Подтверждение регистрации',
+            content=f'Для подтверждения регистрации перейдите по следующей ссылке: \n {confirm_link}',
+            send_to=user.email,
+        )
+
         return {'user': user, 'token': token, 'status': {
             'success': True,
         }}
@@ -56,6 +68,15 @@ def resolve_request_reset(*_, email: str):
             user, token = UsersGateway.request_reset(email, db)
         except ValueError as validation_error:
             return return_validation_error(validation_error)
+
+        # создаем ссылку с токеном, которую отправим юзеру
+        confirm_link = f'{settings.SITE_URL}/reset_password/{token}'
+        # отправляем письмо
+        send_email(
+            subject='Сброс пароля',
+            content=f'Для сброса пароля перейдите по следующей ссылке: \n {confirm_link}',
+            send_to=user.email,
+        )
         return {'user': user, 'token': token, 'status': {
             'success': True,
         }}
